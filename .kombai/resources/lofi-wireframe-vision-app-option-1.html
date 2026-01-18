@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Option 1: Gamification-First Design</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Comic Sans MS', cursive;
+      background: #f5f5f5;
+      color: #333;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      border: 2px solid #333;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+      border-bottom: 3px solid #333;
+      padding-bottom: 10px;
+    }
+    h2 {
+      font-size: 20px;
+      margin: 20px 0 10px;
+      border-bottom: 2px solid #666;
+      padding-bottom: 5px;
+    }
+    h3 {
+      font-size: 16px;
+      margin: 10px 0 5px;
+    }
+    .description {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 20px;
+      font-family: Arial, sans-serif;
+    }
+    .section {
+      margin: 30px 0;
+      padding: 20px;
+      border: 2px dashed #999;
+      position: relative;
+    }
+    .badge {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-family: Arial, sans-serif;
+      font-weight: bold;
+      z-index: 10;
+      color: white;
+    }
+    .badge-reuse {
+      background: #4CAF50;
+    }
+    .badge-new {
+      background: #FF9800;
+    }
+    .grid {
+      display: grid;
+      gap: 15px;
+      margin: 15px 0;
+    }
+    .grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-4 { grid-template-columns: repeat(4, 1fr); }
+    .card {
+      border: 2px solid #333;
+      padding: 15px;
+      background: #fff;
+      position: relative;
+    }
+    .box {
+      border: 2px solid #999;
+      padding: 10px;
+      background: #f9f9f9;
+      margin: 5px 0;
+    }
+    .placeholder-img {
+      background: #ddd;
+      border: 2px solid #999;
+      padding: 40px 20px;
+      text-align: center;
+      color: #666;
+      margin: 10px 0;
+    }
+    .button {
+      border: 2px solid #333;
+      padding: 8px 16px;
+      background: #fff;
+      cursor: pointer;
+      display: inline-block;
+      margin: 5px;
+    }
+    .input {
+      border: 2px solid #999;
+      padding: 8px;
+      width: 100%;
+      background: #fff;
+      margin: 5px 0;
+    }
+    .navbar {
+      border: 2px solid #333;
+      padding: 15px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #fff;
+    }
+    .sidebar {
+      border: 2px solid #333;
+      padding: 15px;
+      background: #f9f9f9;
+      min-height: 400px;
+    }
+    .progress-bar {
+      height: 20px;
+      border: 2px solid #333;
+      background: #fff;
+      position: relative;
+      margin: 10px 0;
+    }
+    .progress-fill {
+      height: 100%;
+      background: repeating-linear-gradient(45deg, #999, #999 10px, #666 10px, #666 20px);
+    }
+    .stat-box {
+      text-align: center;
+      padding: 20px;
+      border: 3px solid #333;
+      background: #fff;
+      position: relative;
+    }
+    .stat-number {
+      font-size: 32px;
+      font-weight: bold;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: #666;
+    }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+    }
+    .calendar-day {
+      aspect-ratio: 1;
+      border: 1px solid #999;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+    }
+    .calendar-day.active {
+      background: #333;
+      color: #fff;
+    }
+    .achievement-badge {
+      width: 60px;
+      height: 60px;
+      border: 2px solid #333;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      font-size: 24px;
+      margin: 5px;
+    }
+    .leaderboard-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
+      align-items: center;
+    }
+    .tabs {
+      display: flex;
+      border-bottom: 2px solid #333;
+      margin: 10px 0;
+    }
+    .tab {
+      padding: 10px 20px;
+      border: 2px solid #333;
+      border-bottom: none;
+      background: #f9f9f9;
+      cursor: pointer;
+      margin-right: 5px;
+    }
+    .tab.active {
+      background: #fff;
+    }
+    @media (max-width: 768px) {
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Option 1: Gamification-First Design</h1>
+    <p class="description">
+      This design emphasizes game-like elements with prominent streaks, achievements, leaderboards, and XP systems. 
+      The goal is to make journaling addictive through rewards, competition, and visible progress tracking.
+      Perfect for users motivated by achievement and competition.
+    </p>
+
+    <!-- NAVIGATION -->
+    <div class="section">
+      <span class="badge badge-reuse" title="frontend/components/layout/Navbar.tsx">[REUSE] Navbar</span>
+      <h2>Navigation Bar</h2>
+      <div class="navbar">
+        <div style="font-weight: bold; font-size: 18px;">🎯 VisionLife</div>
+        <div style="display: flex; gap: 15px;">
+          <span>Dashboard</span>
+          <span>Vision Board</span>
+          <span>Domains</span>
+          <span>Journal</span>
+          <span>Tasks</span>
+          <span>Timeline</span>
+          <span>Leaderboard</span>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <div style="border: 2px solid #333; padding: 5px 10px;">🔥 15 Day Streak</div>
+          <div style="border: 2px solid #333; padding: 5px 10px;">⭐ Level 12</div>
+          <div style="width: 40px; height: 40px; border: 2px solid #333; border-radius: 50%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD PAGE -->
+    <div class="section">
+      <h2>📊 Dashboard Page (Gamified Hub)</h2>
+      
+      <!-- Hero Stats Row -->
+      <div style="position: relative; margin: 20px 0;">
+        <span class="badge badge-new" title="New component at frontend/components/dashboard/GameStatsRow.tsx">[NEW] GameStatsRow</span>
+        <div class="grid grid-4">
+          <div class="stat-box">
+            <div class="stat-number">🔥 15</div>
+            <div class="stat-label">DAY STREAK</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-number">⭐ 12</div>
+            <div class="stat-label">LEVEL</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-number">8,420</div>
+            <div class="stat-label">TOTAL XP</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-number">580/1000</div>
+            <div class="stat-label">NEXT LEVEL</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- XP Progress to Next Level -->
+      <div style="position: relative;">
+        <span class="badge badge-reuse" title="frontend/components/shared/AnimatedProgressBar.tsx">[REUSE] AnimatedProgressBar</span>
+        <h3>Level Progress</h3>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 58%;"></div>
+        </div>
+        <p style="font-size: 12px; color: #666;">420 XP until Level 13! 🎯</p>
+      </div>
+
+      <!-- Main Content Grid -->
+      <div class="grid grid-2" style="margin-top: 30px;">
+        
+        <!-- Left Column: Daily Quest & Achievements -->
+        <div>
+          <!-- Daily Quest -->
+          <div style="position: relative;">
+            <span class="badge badge-new" title="New component at frontend/components/dashboard/DailyQuest.tsx">[NEW] DailyQuest</span>
+            <div class="card">
+              <h3>⚡ Daily Quest (Earn Bonus XP!)</h3>
+              <div class="box" style="margin: 10px 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <div style="font-weight: bold;">Complete Journal Entry</div>
+                    <div style="font-size: 12px; color: #666;">Reflect on your day</div>
+                  </div>
+                  <div style="border: 2px solid #333; padding: 5px 10px;">+50 XP</div>
+                </div>
+                <div class="progress-bar" style="margin-top: 10px; height: 10px;">
+                  <div class="progress-fill" style="width: 0%;"></div>
+                </div>
+              </div>
+              <div class="box" style="margin: 10px 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <div style="font-weight: bold;">Validate 3 Tasks</div>
+                    <div style="font-size: 12px; color: #666;">Review AI-suggested tasks</div>
+                  </div>
+                  <div style="border: 2px solid #333; padding: 5px 10px;">+30 XP</div>
+                </div>
+                <div class="progress-bar" style="margin-top: 10px; height: 10px;">
+                  <div class="progress-fill" style="width: 66%;"></div>
+                </div>
+                <div style="font-size: 11px; color: #666; margin-top: 5px;">2/3 completed</div>
+              </div>
+              <div class="box" style="margin: 10px 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <div style="font-weight: bold;">Add Vision Board Image</div>
+                    <div style="font-size: 12px; color: #666;">Visualize your goals</div>
+                  </div>
+                  <div style="border: 2px solid #333; padding: 5px 10px;">+25 XP</div>
+                </div>
+                <div class="progress-bar" style="margin-top: 10px; height: 10px;">
+                  <div class="progress-fill" style="width: 100%;"></div>
+                </div>
+                <div style="font-size: 11px; color: #333; margin-top: 5px; font-weight: bold;">✓ Completed!</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Achievements -->
+          <div style="position: relative; margin-top: 20px;">
+            <span class="badge badge-new" title="New component at frontend/components/dashboard/AchievementShowcase.tsx">[NEW] AchievementShowcase</span>
+            <div class="card">
+              <h3>🏆 Recent Achievements</h3>
+              <div style="display: flex; flex-wrap: wrap; justify-content: space-around; margin: 15px 0;">
+                <div style="text-align: center;">
+                  <div class="achievement-badge">🔥</div>
+                  <div style="font-size: 10px;">Week Warrior</div>
+                </div>
+                <div style="text-align: center;">
+                  <div class="achievement-badge">✍️</div>
+                  <div style="font-size: 10px;">Journaler</div>
+                </div>
+                <div style="text-align: center;">
+                  <div class="achievement-badge">🎯</div>
+                  <div style="font-size: 10px;">Goal Crusher</div>
+                </div>
+                <div style="text-align: center;">
+                  <div class="achievement-badge" style="background: #f5f5f5; border-style: dashed;">🏅</div>
+                  <div style="font-size: 10px; color: #999;">Locked</div>
+                </div>
+              </div>
+              <div class="button" style="width: calc(100% - 4px); text-align: center;">View All Achievements →</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Streak Calendar & Leaderboard -->
+        <div>
+          <!-- Streak Calendar -->
+          <div style="position: relative;">
+            <span class="badge badge-reuse" title="frontend/components/dashboard/StreakCalendar.tsx">[REUSE] StreakCalendar</span>
+            <div class="card">
+              <h3>🔥 Streak Calendar</h3>
+              <div style="font-size: 24px; text-align: center; margin: 10px 0; font-weight: bold;">15 Day Streak! 🎉</div>
+              <div class="calendar-grid">
+                <div style="font-size: 10px; font-weight: bold;">S</div>
+                <div style="font-size: 10px; font-weight: bold;">M</div>
+                <div style="font-size: 10px; font-weight: bold;">T</div>
+                <div style="font-size: 10px; font-weight: bold;">W</div>
+                <div style="font-size: 10px; font-weight: bold;">T</div>
+                <div style="font-size: 10px; font-weight: bold;">F</div>
+                <div style="font-size: 10px; font-weight: bold;">S</div>
+                <div class="calendar-day active">1</div>
+                <div class="calendar-day active">2</div>
+                <div class="calendar-day active">3</div>
+                <div class="calendar-day active">4</div>
+                <div class="calendar-day active">5</div>
+                <div class="calendar-day active">6</div>
+                <div class="calendar-day active">7</div>
+                <div class="calendar-day active">8</div>
+                <div class="calendar-day active">9</div>
+                <div class="calendar-day active">10</div>
+                <div class="calendar-day active">11</div>
+                <div class="calendar-day active">12</div>
+                <div class="calendar-day active">13</div>
+                <div class="calendar-day active">14</div>
+                <div class="calendar-day active">15</div>
+                <div class="calendar-day">16</div>
+                <div class="calendar-day">17</div>
+                <div class="calendar-day">18</div>
+                <div class="calendar-day">19</div>
+                <div class="calendar-day">20</div>
+                <div class="calendar-day">21</div>
+              </div>
+              <div style="font-size: 12px; color: #666; margin-top: 10px; text-align: center;">
+                Your longest streak: 23 days 🏆
+              </div>
+            </div>
+          </div>
+
+          <!-- Community Leaderboard -->
+          <div style="position: relative; margin-top: 20px;">
+            <span class="badge badge-new" title="New component at frontend/components/dashboard/Leaderboard.tsx">[NEW] Leaderboard</span>
+            <div class="card">
+              <h3>🏆 Community Leaderboard (This Week)</h3>
+              <div class="leaderboard-item" style="background: #f9f9f9;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <div style="font-weight: bold; font-size: 18px;">🥇</div>
+                  <div style="width: 30px; height: 30px; border: 2px solid #333; border-radius: 50%;"></div>
+                  <div>
+                    <div style="font-weight: bold;">Sarah M.</div>
+                    <div style="font-size: 10px; color: #666;">Level 15</div>
+                  </div>
+                </div>
+                <div style="font-weight: bold;">1,240 XP</div>
+              </div>
+              <div class="leaderboard-item" style="background: #f9f9f9;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <div style="font-weight: bold; font-size: 18px;">🥈</div>
+                  <div style="width: 30px; height: 30px; border: 2px solid #333; border-radius: 50%;"></div>
+                  <div>
+                    <div style="font-weight: bold;">James K.</div>
+                    <div style="font-size: 10px; color: #666;">Level 14</div>
+                  </div>
+                </div>
+                <div style="font-weight: bold;">1,180 XP</div>
+              </div>
+              <div class="leaderboard-item" style="background: #f9f9f9;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <div style="font-weight: bold; font-size: 18px;">🥉</div>
+                  <div style="width: 30px; height: 30px; border: 2px solid #333; border-radius: 50%;"></div>
+                  <div>
+                    <div style="font-weight: bold;">You</div>
+                    <div style="font-size: 10px; color: #666;">Level 12</div>
+                  </div>
+                </div>
+                <div style="font-weight: bold;">1,150 XP</div>
+              </div>
+              <div class="leaderboard-item">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <div style="font-size: 14px;">4</div>
+                  <div style="width: 30px; height: 30px; border: 2px solid #333; border-radius: 50%;"></div>
+                  <div>
+                    <div>Mike R.</div>
+                    <div style="font-size: 10px; color: #666;">Level 11</div>
+                  </div>
+                </div>
+                <div>890 XP</div>
+              </div>
+              <div class="button" style="width: calc(100% - 4px); text-align: center; margin-top: 10px;">View Full Leaderboard →</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vision Board Quick Access -->
+      <div style="position: relative; margin-top: 20px;">
+        <span class="badge badge-reuse" title="frontend/components/boards/VisionBoard.tsx">[REUSE] VisionBoard</span>
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3>🎨 Your Vision Board (48% Complete)</h3>
+            <div class="button">View Full Board →</div>
+          </div>
+          <div class="placeholder-img" style="height: 200px;">
+            [Vision Board Thumbnail - Grid of images representing goals]
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 48%;"></div>
+          </div>
+          <p style="font-size: 12px; color: #666; margin-top: 5px;">93,375 / 195,000 pixels complete</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- JOURNAL PAGE -->
+    <div class="section">
+      <h2>✍️ Journal Page (Gamified Entry)</h2>
+      
+      <div style="position: relative;">
+        <span class="badge badge-new" title="New component at frontend/components/journal/GamifiedJournalForm.tsx">[NEW] GamifiedJournalForm</span>
+        <div class="card">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h3 style="font-size: 24px;">How was today? ✨</h3>
+            <p style="color: #666;">Complete your journal to earn +50 XP and maintain your streak!</p>
+          </div>
+
+          <!-- XP Meter at top -->
+          <div style="background: #f9f9f9; padding: 15px; border: 2px solid #333; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+              <span style="font-weight: bold;">Entry Progress</span>
+              <span style="font-weight: bold;">+50 XP</span>
+            </div>
+            <div class="progress-bar" style="height: 15px;">
+              <div class="progress-fill" style="width: 60%;"></div>
+            </div>
+            <p style="font-size: 11px; color: #666; margin-top: 5px;">Keep writing to unlock full XP!</p>
+          </div>
+
+          <textarea class="input" rows="8" placeholder="What did you complete? What challenged you? How do you feel about tomorrow?"></textarea>
+          
+          <h3 style="margin-top: 20px;">💪 Today's Tasks (Earn +10 XP each)</h3>
+          <div class="box">
+            <input type="checkbox" checked> <span style="text-decoration: line-through;">Review infrastructure project PR</span>
+          </div>
+          <div class="box">
+            <input type="checkbox" checked> <span style="text-decoration: line-through;">Morning workout - Strength training</span>
+          </div>
+          <div class="box">
+            <input type="checkbox"> <span>Continue ML project - Data preprocessing</span>
+          </div>
+
+          <!-- Bonus XP Opportunities -->
+          <div style="background: #f9f9f9; padding: 15px; border: 2px dashed #999; margin: 20px 0;">
+            <h3>🎯 Bonus XP Opportunities</h3>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+              <div class="button">📸 Add Photo (+15 XP)</div>
+              <div class="button">🎨 Update Vision Board (+20 XP)</div>
+              <div class="button">💭 Set Tomorrow's Goal (+10 XP)</div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <div class="button" style="flex: 1; text-align: center; background: #f9f9f9;">Save Draft</div>
+            <div class="button" style="flex: 1; text-align: center; font-weight: bold;">💾 Complete Journal (+50 XP) →</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VISION BOARD PAGE -->
+    <div class="section">
+      <h2>🎨 Vision Board Page (Progress Focused)</h2>
+      
+      <div class="grid grid-3">
+        <div style="position: relative;">
+          <span class="badge badge-new" title="New component at frontend/components/boards/DomainProgressCard.tsx">[NEW] DomainProgressCard</span>
+          <div class="card">
+            <div style="font-size: 20px; text-align: center;">🔵</div>
+            <h3>Career</h3>
+            <div style="font-size: 24px; font-weight: bold; text-align: center; margin: 10px 0;">45%</div>
+            <div class="progress-bar" style="height: 10px;">
+              <div class="progress-fill" style="width: 45%;"></div>
+            </div>
+            <p style="font-size: 11px; color: #666; margin-top: 5px; text-align: center;">43,875 pixels</p>
+          </div>
+        </div>
+        <div style="position: relative;">
+          <span class="badge badge-new" title="New component at frontend/components/boards/DomainProgressCard.tsx">[NEW] DomainProgressCard</span>
+          <div class="card">
+            <div style="font-size: 20px; text-align: center;">🟢</div>
+            <h3>Health</h3>
+            <div style="font-size: 24px; font-weight: bold; text-align: center; margin: 10px 0;">30%</div>
+            <div class="progress-bar" style="height: 10px;">
+              <div class="progress-fill" style="width: 30%;"></div>
+            </div>
+            <p style="font-size: 11px; color: #666; margin-top: 5px; text-align: center;">29,250 pixels</p>
+          </div>
+        </div>
+        <div style="position: relative;">
+          <span class="badge badge-new" title="New component at frontend/components/boards/DomainProgressCard.tsx">[NEW] DomainProgressCard</span>
+          <div class="card">
+            <div style="font-size: 20px; text-align: center;">🟡</div>
+            <h3>Learning</h3>
+            <div style="font-size: 24px; font-weight: bold; text-align: center; margin: 10px 0;">15%</div>
+            <div class="progress-bar" style="height: 10px;">
+              <div class="progress-fill" style="width: 15%;"></div>
+            </div>
+            <p style="font-size: 11px; color: #666; margin-top: 5px; text-align: center;">14,625 pixels</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="position: relative; margin-top: 20px;">
+        <span class="badge badge-reuse" title="frontend/components/boards/PixelatedBoard.tsx">[REUSE] PixelatedBoard</span>
+        <div class="placeholder-img" style="height: 400px;">
+          [Large Pixelated Vision Board - Mosaic of goal images with progress overlay]
+          <br><br>
+          Color-coded sections showing different life domains
+          <br>
+          Partially revealed images based on journaling progress
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 20px;">
+        <div class="button" style="font-size: 16px; padding: 12px 24px;">🎯 Add New Goal Image (+25 XP)</div>
+      </div>
+    </div>
+
+    <!-- KEY FEATURES -->
+    <div class="section">
+      <h2>🌟 Key Gamification Features</h2>
+      <ul style="font-family: Arial, sans-serif; line-height: 1.8; margin-left: 20px;">
+        <li><strong>XP & Levels:</strong> Every action earns XP (journaling +50, tasks +10-30, vision board updates +15-25)</li>
+        <li><strong>Daily Quests:</strong> Rotating challenges that guide users through core features with bonus XP</li>
+        <li><strong>Streak System:</strong> Visual calendar showing consecutive days, with streak milestones (7, 30, 100, 365 days)</li>
+        <li><strong>Achievements:</strong> Unlockable badges for milestones (First Week, 100 Journals, Vision Completionist, etc.)</li>
+        <li><strong>Leaderboard:</strong> Weekly community rankings to foster friendly competition</li>
+        <li><strong>Progress Bars:</strong> Everywhere - XP, vision board completion, domain progress, task completion</li>
+        <li><strong>Instant Feedback:</strong> Animated notifications for XP gains, level ups, and achievements</li>
+        <li><strong>Social Proof:</strong> See anonymized stats of other users' progress for motivation</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>📱 Mobile Considerations</h2>
+      <ul style="font-family: Arial, sans-serif; line-height: 1.8; margin-left: 20px;">
+        <li>Bottom navigation bar with XP counter always visible</li>
+        <li>Swipe gestures for quick task completion</li>
+        <li>Push notifications for streak reminders and daily quests</li>
+        <li>One-tap journal entry with voice-to-text option</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

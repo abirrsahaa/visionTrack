@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Option 2: Visual-First Inspirational Design</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Comic Sans MS', cursive;
+      background: #f5f5f5;
+      color: #333;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      border: 2px solid #333;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+      border-bottom: 3px solid #333;
+      padding-bottom: 10px;
+    }
+    h2 {
+      font-size: 20px;
+      margin: 20px 0 10px;
+      border-bottom: 2px solid #666;
+      padding-bottom: 5px;
+    }
+    h3 {
+      font-size: 16px;
+      margin: 10px 0 5px;
+    }
+    .description {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 20px;
+      font-family: Arial, sans-serif;
+    }
+    .section {
+      margin: 30px 0;
+      padding: 20px;
+      border: 2px dashed #999;
+      position: relative;
+    }
+    .badge {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-family: Arial, sans-serif;
+      font-weight: bold;
+      z-index: 10;
+      color: white;
+    }
+    .badge-reuse {
+      background: #4CAF50;
+    }
+    .badge-new {
+      background: #FF9800;
+    }
+    .grid {
+      display: grid;
+      gap: 15px;
+      margin: 15px 0;
+    }
+    .grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-4 { grid-template-columns: repeat(4, 1fr); }
+    .card {
+      border: 2px solid #333;
+      padding: 15px;
+      background: #fff;
+      position: relative;
+    }
+    .box {
+      border: 2px solid #999;
+      padding: 10px;
+      background: #f9f9f9;
+      margin: 5px 0;
+    }
+    .placeholder-img {
+      background: #ddd;
+      border: 2px solid #999;
+      padding: 40px 20px;
+      text-align: center;
+      color: #666;
+      margin: 10px 0;
+    }
+    .button {
+      border: 2px solid #333;
+      padding: 8px 16px;
+      background: #fff;
+      cursor: pointer;
+      display: inline-block;
+      margin: 5px;
+    }
+    .hero-section {
+      border: 3px solid #333;
+      padding: 40px;
+      margin: 20px 0;
+      text-align: center;
+      background: #fff;
+      position: relative;
+    }
+    .vision-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      margin: 20px 0;
+    }
+    .vision-cell {
+      aspect-ratio: 1;
+      border: 2px solid #999;
+      background: #f5f5f5;
+    }
+    .vision-cell.filled {
+      background: repeating-linear-gradient(45deg, #ddd, #ddd 10px, #ccc 10px, #ccc 20px);
+    }
+    .quote-box {
+      border: 3px solid #333;
+      padding: 20px;
+      background: #f9f9f9;
+      font-style: italic;
+      text-align: center;
+      margin: 20px 0;
+      position: relative;
+    }
+    .progress-bar {
+      height: 20px;
+      border: 2px solid #333;
+      background: #fff;
+      position: relative;
+      margin: 10px 0;
+    }
+    .progress-fill {
+      height: 100%;
+      background: repeating-linear-gradient(45deg, #999, #999 10px, #666 10px, #666 20px);
+    }
+    .masonry {
+      column-count: 3;
+      column-gap: 15px;
+    }
+    .masonry-item {
+      break-inside: avoid;
+      margin-bottom: 15px;
+    }
+    .stat-circle {
+      width: 120px;
+      height: 120px;
+      border: 3px solid #333;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 10px auto;
+      background: #fff;
+    }
+    .milestone-timeline {
+      position: relative;
+      padding: 20px 0;
+    }
+    .timeline-item {
+      display: flex;
+      gap: 20px;
+      margin: 20px 0;
+      align-items: center;
+    }
+    .timeline-dot {
+      width: 30px;
+      height: 30px;
+      border: 3px solid #333;
+      border-radius: 50%;
+      background: #fff;
+      flex-shrink: 0;
+    }
+    .timeline-dot.completed {
+      background: #333;
+    }
+    @media (max-width: 768px) {
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .masonry { column-count: 1; }
+      .vision-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Option 2: Visual-First Inspirational Design</h1>
+    <p class="description">
+      This design emphasizes beautiful imagery, inspiring quotes, and visual progress tracking. 
+      The vision board is the centerpiece, with every interaction designed to be visually rewarding and motivating.
+      Perfect for visual thinkers who are inspired by imagery and aesthetic beauty.
+    </p>
+
+    <!-- NAVIGATION -->
+    <div class="section">
+      <span class="badge badge-reuse" title="frontend/components/layout/Navbar.tsx">[REUSE] Navbar</span>
+      <h2>Minimal Navigation</h2>
+      <div style="border: 2px solid #333; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-size: 20px; font-weight: bold;">✨ VisionLife</div>
+        <div style="display: flex; gap: 20px; font-family: Arial, sans-serif;">
+          <span>Vision</span>
+          <span>Reflect</span>
+          <span>Progress</span>
+        </div>
+        <div style="width: 40px; height: 40px; border: 2px solid #333; border-radius: 50%;"></div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD/HOME PAGE -->
+    <div class="section">
+      <h2>🏠 Home Page (Visual Dashboard)</h2>
+      
+      <!-- Hero Vision Board Section -->
+      <div class="hero-section">
+        <div style="position: relative;">
+          <span class="badge badge-reuse" title="frontend/components/boards/VisionBoard.tsx">[REUSE] VisionBoard</span>
+          <h3 style="font-size: 32px; margin-bottom: 10px;">Your Vision is Taking Shape ✨</h3>
+          <p style="font-size: 16px; color: #666; margin-bottom: 30px;">48% Complete • Keep journaling to reveal more</p>
+          
+          <div class="placeholder-img" style="height: 500px; border: 3px solid #333;">
+            [Large Hero Vision Board]
+            <br><br>
+            Beautiful mosaic of inspirational images
+            <br>
+            Semi-transparent overlay showing "locked" areas
+            <br>
+            Smooth reveal animations as you journal
+            <br><br>
+            Images: Career goals, fitness inspiration, travel destinations, relationships, learning
+          </div>
+          
+          <div style="margin-top: 20px;">
+            <div class="progress-bar" style="height: 30px;">
+              <div class="progress-fill" style="width: 48%;"></div>
+            </div>
+            <p style="font-size: 14px; color: #666; margin-top: 10px;">93,375 / 195,000 pixels revealed</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Inspirational Quote -->
+      <div class="quote-box">
+        <span class="badge badge-new" title="New component at frontend/components/shared/DailyQuote.tsx">[NEW] DailyQuote</span>
+        <p style="font-size: 20px; margin-bottom: 10px;">
+          "The future belongs to those who believe in the beauty of their dreams."
+        </p>
+        <p style="font-size: 14px; color: #666;">— Eleanor Roosevelt</p>
+      </div>
+
+      <!-- Current Focus Areas -->
+      <div style="position: relative;">
+        <span class="badge badge-new" title="New component at frontend/components/dashboard/FocusAreas.tsx">[NEW] FocusAreas</span>
+        <h3 style="font-size: 24px; margin: 30px 0 15px;">Your Focus This Week</h3>
+        <div class="masonry">
+          <div class="masonry-item">
+            <div class="card">
+              <div class="placeholder-img" style="height: 200px;">
+                [Career Goal Image]
+                <br>
+                Office/Leadership scene
+              </div>
+              <h3 style="margin-top: 10px;">🔵 Career</h3>
+              <p style="font-size: 13px; color: #666; margin: 5px 0;">Advance to senior engineering role</p>
+              <div class="progress-bar" style="height: 8px; margin-top: 10px;">
+                <div class="progress-fill" style="width: 45%;"></div>
+              </div>
+              <p style="font-size: 11px; color: #666; margin-top: 5px;">45% complete</p>
+            </div>
+          </div>
+          <div class="masonry-item">
+            <div class="card">
+              <div class="placeholder-img" style="height: 250px;">
+                [Health Goal Image]
+                <br>
+                Fitness/Wellness scene
+              </div>
+              <h3 style="margin-top: 10px;">🟢 Health</h3>
+              <p style="font-size: 13px; color: #666; margin: 5px 0;">Build strength and flexibility</p>
+              <div class="progress-bar" style="height: 8px; margin-top: 10px;">
+                <div class="progress-fill" style="width: 30%;"></div>
+              </div>
+              <p style="font-size: 11px; color: #666; margin-top: 5px;">30% complete</p>
+            </div>
+          </div>
+          <div class="masonry-item">
+            <div class="card">
+              <div class="placeholder-img" style="height: 180px;">
+                [Learning Goal Image]
+                <br>
+                Education/Skills scene
+              </div>
+              <h3 style="margin-top: 10px;">🟡 Learning</h3>
+              <p style="font-size: 13px; color: #666; margin: 5px 0;">Master machine learning</p>
+              <div class="progress-bar" style="height: 8px; margin-top: 10px;">
+                <div class="progress-fill" style="width: 15%;"></div>
+              </div>
+              <p style="font-size: 11px; color: #666; margin-top: 5px;">15% complete</p>
+            </div>
+          </div>
+          <div class="masonry-item">
+            <div class="card">
+              <div class="placeholder-img" style="height: 220px;">
+                [Relationship Goal Image]
+                <br>
+                Family/Friends scene
+              </div>
+              <h3 style="margin-top: 10px;">💗 Relationships</h3>
+              <p style="font-size: 13px; color: #666; margin: 5px 0;">Deepen connections</p>
+              <div class="progress-bar" style="height: 8px; margin-top: 10px;">
+                <div class="progress-fill" style="width: 6%;"></div>
+              </div>
+              <p style="font-size: 11px; color: #666; margin-top: 5px;">6% complete</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Today's Reflection Prompt -->
+      <div style="position: relative; margin-top: 30px;">
+        <span class="badge badge-new" title="New component at frontend/components/journal/ReflectionPrompt.tsx">[NEW] ReflectionPrompt</span>
+        <div class="card" style="background: #f9f9f9; border-width: 3px;">
+          <h3 style="font-size: 20px; margin-bottom: 15px;">✨ Time to Reflect</h3>
+          <p style="font-size: 14px; color: #666; margin-bottom: 20px;">
+            Your daily journal unlocks more of your vision board and brings your goals to life.
+          </p>
+          <div class="button" style="font-size: 16px; padding: 12px 24px; width: 100%; text-align: center; font-weight: bold;">
+            ✍️ Write Today's Journal Entry →
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Milestones -->
+      <div style="position: relative; margin-top: 30px;">
+        <span class="badge badge-new" title="New component at frontend/components/dashboard/MilestoneGallery.tsx">[NEW] MilestoneGallery</span>
+        <h3 style="font-size: 24px; margin-bottom: 15px;">🎉 Recent Milestones</h3>
+        <div class="grid grid-3">
+          <div class="card">
+            <div class="placeholder-img" style="height: 150px;">
+              [Celebration Image]
+              <br>
+              Confetti/Achievement
+            </div>
+            <h3 style="margin-top: 10px;">Week Warrior</h3>
+            <p style="font-size: 12px; color: #666;">7 day streak achieved</p>
+            <p style="font-size: 11px; color: #999; margin-top: 5px;">2 days ago</p>
+          </div>
+          <div class="card">
+            <div class="placeholder-img" style="height: 150px;">
+              [Progress Image]
+              <br>
+              Milestone marker
+            </div>
+            <h3 style="margin-top: 10px;">Career 25%</h3>
+            <p style="font-size: 12px; color: #666;">Quarter way there!</p>
+            <p style="font-size: 11px; color: #999; margin-top: 5px;">5 days ago</p>
+          </div>
+          <div class="card">
+            <div class="placeholder-img" style="height: 150px;">
+              [Journal Image]
+              <br>
+              Writing/Reflection
+            </div>
+            <h3 style="margin-top: 10px;">10 Reflections</h3>
+            <p style="font-size: 12px; color: #666;">Building the habit</p>
+            <p style="font-size: 11px; color: #999; margin-top: 5px;">1 week ago</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JOURNAL PAGE -->
+    <div class="section">
+      <h2>✍️ Journal Page (Visual & Inspiring)</h2>
+      
+      <div class="hero-section" style="padding: 30px;">
+        <h3 style="font-size: 28px; margin-bottom: 10px;">How was your day? ✨</h3>
+        <p style="font-size: 14px; color: #666;">Sunday, January 18, 2026</p>
+      </div>
+
+      <div class="grid grid-2">
+        <!-- Left: Writing Area -->
+        <div>
+          <div style="position: relative;">
+            <span class="badge badge-new" title="New component at frontend/components/journal/VisualJournalForm.tsx">[NEW] VisualJournalForm</span>
+            <div class="card">
+              <h3>Your Reflection</h3>
+              <textarea style="width: 100%; min-height: 250px; border: 2px solid #999; padding: 10px; margin: 10px 0; font-family: Georgia, serif; font-size: 14px;" placeholder="What did you complete? What challenged you? How do you feel about tomorrow?"></textarea>
+              
+              <h3 style="margin-top: 20px;">Suggested prompts:</h3>
+              <ul style="font-family: Arial, sans-serif; margin: 10px 0; margin-left: 20px; color: #666;">
+                <li>What did you complete?</li>
+                <li>What challenged you?</li>
+                <li>How do you feel about tomorrow?</li>
+              </ul>
+
+              <h3 style="margin-top: 20px;">📸 Add Photos (Optional)</h3>
+              <div class="grid grid-3" style="margin: 10px 0;">
+                <div class="placeholder-img" style="height: 100px; cursor: pointer;">[+]<br>Add Photo</div>
+                <div class="placeholder-img" style="height: 100px; cursor: pointer;">[+]<br>Add Photo</div>
+                <div class="placeholder-img" style="height: 100px; cursor: pointer;">[+]<br>Add Photo</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Motivation & Progress -->
+        <div>
+          <!-- Visual Progress Indicator -->
+          <div style="position: relative;">
+            <span class="badge badge-new" title="New component at frontend/components/journal/JournalReward.tsx">[NEW] JournalReward</span>
+            <div class="card" style="background: #f9f9f9;">
+              <h3 style="text-align: center;">Today's Progress Unlock</h3>
+              <div class="placeholder-img" style="height: 200px; margin: 15px 0;">
+                [Preview of Vision Board Section]
+                <br><br>
+                Show which part of vision board
+                <br>
+                will be revealed after journal
+              </div>
+              <p style="text-align: center; font-size: 13px; color: #666;">
+                Complete your journal to reveal this section of your vision board!
+              </p>
+            </div>
+          </div>
+
+          <!-- Streak Reminder -->
+          <div style="position: relative; margin-top: 15px;">
+            <span class="badge badge-reuse" title="frontend/components/dashboard/StreakBadge.tsx">[REUSE] StreakBadge</span>
+            <div class="card">
+              <div style="text-align: center;">
+                <div style="font-size: 48px; margin: 10px 0;">🔥</div>
+                <h3 style="font-size: 24px;">15 Day Streak!</h3>
+                <p style="color: #666; margin-top: 5px;">Don't break it now!</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Today's Tasks -->
+          <div style="position: relative; margin-top: 15px;">
+            <span class="badge badge-reuse" title="frontend/components/tasks/TaskValidationCard.tsx">[REUSE] TaskValidationCard</span>
+            <div class="card">
+              <h3>Today's Tasks</h3>
+              <div class="box">
+                <input type="checkbox" checked> <span style="text-decoration: line-through;">Review infrastructure PR</span>
+              </div>
+              <div class="box">
+                <input type="checkbox" checked> <span style="text-decoration: line-through;">Morning workout</span>
+              </div>
+              <div class="box">
+                <input type="checkbox"> <span>ML project work</span>
+              </div>
+              <p style="font-size: 12px; color: #666; margin-top: 10px;">2 of 3 completed</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit Buttons -->
+      <div style="margin-top: 30px; text-align: center;">
+        <div class="button" style="background: #f9f9f9;">Save Draft</div>
+        <div class="button" style="font-weight: bold; padding: 12px 40px;">💾 Complete Today's Journal →</div>
+      </div>
+    </div>
+
+    <!-- VISION BOARD PAGE -->
+    <div class="section">
+      <h2>🎨 Vision Board Page (Immersive Gallery)</h2>
+      
+      <div style="position: relative;">
+        <span class="badge badge-reuse" title="frontend/components/boards/VisionBoard.tsx">[REUSE] VisionBoard</span>
+        <h3 style="font-size: 28px; margin-bottom: 20px; text-align: center;">Your Vision Board</h3>
+        
+        <!-- Full Screen Vision Board -->
+        <div class="placeholder-img" style="height: 600px; border-width: 3px;">
+          [Immersive Vision Board Display]
+          <br><br>
+          Full-bleed image grid showing all life domains
+          <br>
+          Hover effects to highlight specific goals
+          <br>
+          Click to zoom and see details
+          <br><br>
+          Progress overlay showing % complete per domain
+        </div>
+
+        <!-- Domain Breakdown -->
+        <div class="grid grid-4" style="margin-top: 20px;">
+          <div class="stat-circle">
+            <div style="font-size: 20px;">🔵</div>
+            <div style="font-size: 24px; font-weight: bold;">45%</div>
+            <div style="font-size: 11px;">Career</div>
+          </div>
+          <div class="stat-circle">
+            <div style="font-size: 20px;">🟢</div>
+            <div style="font-size: 24px; font-weight: bold;">30%</div>
+            <div style="font-size: 11px;">Health</div>
+          </div>
+          <div class="stat-circle">
+            <div style="font-size: 20px;">🟡</div>
+            <div style="font-size: 24px; font-weight: bold;">15%</div>
+            <div style="font-size: 11px;">Learning</div>
+          </div>
+          <div class="stat-circle">
+            <div style="font-size: 20px;">💗</div>
+            <div style="font-size: 24px; font-weight: bold;">6%</div>
+            <div style="font-size: 11px;">Relations</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add New Vision -->
+      <div style="text-align: center; margin-top: 30px;">
+        <div class="button" style="font-size: 16px; padding: 12px 40px;">✨ Add New Vision Image</div>
+      </div>
+    </div>
+
+    <!-- TIMELINE PAGE -->
+    <div class="section">
+      <h2>📅 Timeline Page (Visual Journey)</h2>
+      
+      <div style="position: relative;">
+        <span class="badge badge-new" title="New component at frontend/components/timeline/VisualTimeline.tsx">[NEW] VisualTimeline</span>
+        <h3 style="font-size: 24px; margin-bottom: 20px;">Your Journey</h3>
+        
+        <!-- Scrollable Week Cards -->
+        <div style="display: flex; gap: 15px; overflow-x: auto; padding: 10px 0;">
+          <div style="min-width: 300px; position: relative;">
+            <span class="badge badge-reuse" title="frontend/components/timeline/WeekCard.tsx">[REUSE] WeekCard</span>
+            <div class="card">
+              <div class="placeholder-img" style="height: 200px;">
+                [Week 26 Snapshot]
+                <br>
+                Collage of week's activities
+              </div>
+              <h3 style="margin-top: 10px;">Week 26</h3>
+              <p style="font-size: 12px; color: #666;">Jan 19, 2026</p>
+              <div class="progress-bar" style="height: 8px; margin-top: 10px;">
+                <div class="progress-fill" style="width: 80%;"></div>
+              </div>
+              <p style="font-size: 11px; color: #666; margin-top: 5px;">6,035 pixels • 80% complete</p>
+            </div>
+          </div>
+          <div style="min-width: 300px; position: relative;">
+            <span class="badge badge-reuse" title="frontend/components/timeline/WeekCard.tsx">[REUSE] WeekCard</span>
+            <div class="card">
+              <div class="placeholder-img" style="height: 200px;">
+                [Week 25 Snapshot]
+              </div>
+              <h3 style="margin-top: 10px;">Week 25</h3>
+              <p style="font-size: 12px; color: #666;">Jan 12, 2026</p>
+              <div class="progress-bar" style="height: 8px; margin-top: 10px;">
+                <div class="progress-fill" style="width: 76%;"></div>
+              </div>
+              <p style="font-size: 11px; color: #666; margin-top: 5px;">5,919 pixels • 76% complete</p>
+            </div>
+          </div>
+          <div style="min-width: 300px; position: relative;">
+            <span class="badge badge-reuse" title="frontend/components/timeline/WeekCard.tsx">[REUSE] WeekCard</span>
+            <div class="card">
+              <div class="placeholder-img" style="height: 200px;">
+                [Week 24 Snapshot]
+              </div>
+              <h3 style="margin-top: 10px;">Week 24</h3>
+              <p style="font-size: 12px; color: #666;">Jan 5, 2026</p>
+              <div class="progress-bar" style="height: 8px; margin-top: 10px;">
+                <div class="progress-fill" style="width: 77%;"></div>
+              </div>
+              <p style="font-size: 11px; color: #666; margin-top: 5px;">5,804 pixels • 77% complete</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Milestone Timeline -->
+        <div class="milestone-timeline" style="margin-top: 40px;">
+          <h3 style="margin-bottom: 20px;">Milestones Achieved</h3>
+          <div class="timeline-item">
+            <div class="timeline-dot completed"></div>
+            <div style="flex: 1;">
+              <div class="card">
+                <h3>First Week Complete 🎉</h3>
+                <p style="font-size: 12px; color: #666;">Completed 7 consecutive days of journaling</p>
+                <p style="font-size: 11px; color: #999; margin-top: 5px;">Dec 8, 2025</p>
+              </div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot completed"></div>
+            <div style="flex: 1;">
+              <div class="card">
+                <h3>Career Domain 25% 🎯</h3>
+                <p style="font-size: 12px; color: #666;">Quarter of the way to your career vision</p>
+                <p style="font-size: 11px; color: #999; margin-top: 5px;">Dec 29, 2025</p>
+              </div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div style="flex: 1;">
+              <div class="card" style="border-style: dashed; background: #f9f9f9;">
+                <h3>30 Day Streak (Upcoming) 🔥</h3>
+                <p style="font-size: 12px; color: #666;">15 more days to unlock this achievement</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KEY FEATURES -->
+    <div class="section">
+      <h2>🌟 Key Visual Features</h2>
+      <ul style="font-family: Arial, sans-serif; line-height: 1.8; margin-left: 20px;">
+        <li><strong>Vision Board Centerpiece:</strong> Large, beautiful vision board is the main focus of the app</li>
+        <li><strong>Progressive Reveal:</strong> Journaling unlocks more of your vision board, creating anticipation</li>
+        <li><strong>Inspirational Imagery:</strong> Every page uses beautiful photos and visual metaphors for goals</li>
+        <li><strong>Masonry Layouts:</strong> Pinterest-style layouts for visual interest and optimal image display</li>
+        <li><strong>Daily Quotes:</strong> Rotating inspirational quotes to maintain motivation</li>
+        <li><strong>Milestone Gallery:</strong> Visual celebration of achievements with images</li>
+        <li><strong>Photo Journaling:</strong> Easy ability to attach photos to journal entries</li>
+        <li><strong>Minimal UI:</strong> Clean, uncluttered interface that lets the imagery shine</li>
+        <li><strong>Smooth Animations:</strong> Gentle transitions and reveals for a premium feel</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>🎨 Design Principles</h2>
+      <ul style="font-family: Arial, sans-serif; line-height: 1.8; margin-left: 20px;">
+        <li>Beauty inspires action - every screen should be visually appealing</li>
+        <li>Progress is visual - use imagery and animations to show advancement</li>
+        <li>Less is more - minimal UI elements, maximum visual impact</li>
+        <li>Celebrate milestones - make achievements feel special with visual rewards</li>
+        <li>Personal connection - user's own images and goals take center stage</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

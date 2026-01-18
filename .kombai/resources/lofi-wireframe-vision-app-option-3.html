@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Option 3: Balanced Modern Design</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Comic Sans MS', cursive;
+      background: #f5f5f5;
+      color: #333;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      border: 2px solid #333;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+      border-bottom: 3px solid #333;
+      padding-bottom: 10px;
+    }
+    h2 {
+      font-size: 20px;
+      margin: 20px 0 10px;
+      border-bottom: 2px solid #666;
+      padding-bottom: 5px;
+    }
+    h3 {
+      font-size: 16px;
+      margin: 10px 0 5px;
+    }
+    .description {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 20px;
+      font-family: Arial, sans-serif;
+    }
+    .section {
+      margin: 30px 0;
+      padding: 20px;
+      border: 2px dashed #999;
+      position: relative;
+    }
+    .badge {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-family: Arial, sans-serif;
+      font-weight: bold;
+      z-index: 10;
+      color: white;
+    }
+    .badge-reuse {
+      background: #4CAF50;
+    }
+    .badge-new {
+      background: #FF9800;
+    }
+    .grid {
+      display: grid;
+      gap: 15px;
+      margin: 15px 0;
+    }
+    .grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-4 { grid-template-columns: repeat(4, 1fr); }
+    .card {
+      border: 2px solid #333;
+      padding: 15px;
+      background: #fff;
+      position: relative;
+    }
+    .box {
+      border: 2px solid #999;
+      padding: 10px;
+      background: #f9f9f9;
+      margin: 5px 0;
+    }
+    .placeholder-img {
+      background: #ddd;
+      border: 2px solid #999;
+      padding: 40px 20px;
+      text-align: center;
+      color: #666;
+      margin: 10px 0;
+    }
+    .button {
+      border: 2px solid #333;
+      padding: 8px 16px;
+      background: #fff;
+      cursor: pointer;
+      display: inline-block;
+      margin: 5px;
+    }
+    .sidebar {
+      border: 2px solid #333;
+      padding: 20px;
+      background: #f9f9f9;
+    }
+    .main-content {
+      border: 2px solid #333;
+      padding: 20px;
+      background: #fff;
+    }
+    .progress-bar {
+      height: 20px;
+      border: 2px solid #333;
+      background: #fff;
+      position: relative;
+      margin: 10px 0;
+    }
+    .progress-fill {
+      height: 100%;
+      background: repeating-linear-gradient(45deg, #999, #999 10px, #666 10px, #666 20px);
+    }
+    .tab-bar {
+      display: flex;
+      border-bottom: 2px solid #333;
+      gap: 5px;
+    }
+    .tab {
+      padding: 10px 20px;
+      border: 2px solid #333;
+      border-bottom: none;
+      background: #f9f9f9;
+      cursor: pointer;
+    }
+    .tab.active {
+      background: #fff;
+    }
+    .stat-card {
+      text-align: center;
+      padding: 15px;
+      border: 2px solid #333;
+      background: #fff;
+    }
+    .quick-action {
+      border: 2px solid #333;
+      padding: 15px;
+      background: #fff;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.3s;
+    }
+    .notification {
+      border: 2px solid #333;
+      padding: 10px;
+      background: #f9f9f9;
+      margin: 5px 0;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .split-view {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 968px) {
+      .split-view { grid-template-columns: 1fr; }
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Option 3: Balanced Modern Design</h1>
+    <p class="description">
+      This design combines the best of both worlds: gamification elements for motivation, 
+      beautiful visual progress tracking for inspiration, simple and intuitive UI for daily use, 
+      and social features for accountability. A well-rounded, professional design suitable for serious goal-achievers.
+    </p>
+
+    <!-- NAVIGATION -->
+    <div class="section">
+      <span class="badge badge-reuse" title="frontend/components/layout/Navbar.tsx">[REUSE] Navbar</span>
+      <h2>Persistent Navigation</h2>
+      <div style="border: 2px solid #333; padding: 15px; display: flex; justify-content: space-between; align-items: center; background: #fff;">
+        <div style="display: flex; gap: 30px; align-items: center;">
+          <div style="font-size: 20px; font-weight: bold;">🎯 VisionLife</div>
+          <div style="display: flex; gap: 20px; font-family: Arial, sans-serif;">
+            <span style="font-weight: bold; border-bottom: 3px solid #333;">Dashboard</span>
+            <span>Vision Board</span>
+            <span>Domains</span>
+            <span>Journal</span>
+            <span>Timeline</span>
+          </div>
+        </div>
+        <div style="display: flex; gap: 15px; align-items: center;">
+          <div style="border: 2px solid #333; padding: 5px 10px; font-size: 12px;">🔥 15 days</div>
+          <div style="border: 2px solid #333; padding: 5px 10px; font-size: 12px;">⭐ Lvl 12</div>
+          <div style="width: 35px; height: 35px; border: 2px solid #333; border-radius: 50%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD PAGE -->
+    <div class="section">
+      <h2>📊 Dashboard Page (Command Center)</h2>
+      
+      <div class="split-view">
+        <!-- Left Sidebar -->
+        <div class="sidebar">
+          <h3>Quick Stats</h3>
+          
+          <!-- Streak -->
+          <div style="position: relative; margin: 15px 0;">
+            <span class="badge badge-reuse" title="frontend/components/dashboard/StreakBadge.tsx">[REUSE] StreakBadge</span>
+            <div style="text-align: center; padding: 20px; border: 2px solid #333; background: #fff;">
+              <div style="font-size: 40px;">🔥</div>
+              <div style="font-size: 28px; font-weight: bold; margin: 5px 0;">15</div>
+              <div style="font-size: 12px; color: #666;">Day Streak</div>
+            </div>
+          </div>
+
+          <!-- Level Progress -->
+          <div style="position: relative; margin: 15px 0;">
+            <span class="badge badge-new" title="New component at frontend/components/dashboard/LevelCard.tsx">[NEW] LevelCard</span>
+            <div style="padding: 15px; border: 2px solid #333; background: #fff;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-size: 18px; font-weight: bold;">Level 12</div>
+                  <div style="font-size: 11px; color: #666;">8,420 Total XP</div>
+                </div>
+                <div style="font-size: 24px;">⭐</div>
+              </div>
+              <div class="progress-bar" style="height: 12px; margin-top: 10px;">
+                <div class="progress-fill" style="width: 58%;"></div>
+              </div>
+              <div style="font-size: 11px; color: #666; margin-top: 5px;">420 XP to Level 13</div>
+            </div>
+          </div>
+
+          <!-- Overall Vision Progress -->
+          <div style="position: relative; margin: 15px 0;">
+            <span class="badge badge-reuse" title="frontend/components/boards/MainBoardProgress.tsx">[REUSE] MainBoardProgress</span>
+            <div style="padding: 15px; border: 2px solid #333; background: #fff;">
+              <h3>Vision Board</h3>
+              <div style="font-size: 24px; font-weight: bold; text-align: center; margin: 10px 0;">48%</div>
+              <div class="progress-bar" style="height: 12px;">
+                <div class="progress-fill" style="width: 48%;"></div>
+              </div>
+              <div style="font-size: 11px; color: #666; margin-top: 5px; text-align: center;">93,375 / 195,000 pixels</div>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div style="margin-top: 30px;">
+            <h3 style="margin-bottom: 10px;">Quick Actions</h3>
+            <div class="quick-action" style="margin: 10px 0;">
+              <div style="font-size: 24px;">✍️</div>
+              <div style="font-size: 12px; margin-top: 5px; font-family: Arial, sans-serif;">Write Journal</div>
+            </div>
+            <div class="quick-action" style="margin: 10px 0;">
+              <div style="font-size: 24px;">✅</div>
+              <div style="font-size: 12px; margin-top: 5px; font-family: Arial, sans-serif;">Review Tasks</div>
+            </div>
+            <div class="quick-action" style="margin: 10px 0;">
+              <div style="font-size: 24px;">🎨</div>
+              <div style="font-size: 12px; margin-top: 5px; font-family: Arial, sans-serif;">Update Vision</div>
+            </div>
+          </div>
+
+          <!-- Community -->
+          <div style="position: relative; margin-top: 30px;">
+            <span class="badge badge-new" title="New component at frontend/components/social/CommunityWidget.tsx">[NEW] CommunityWidget</span>
+            <div style="padding: 15px; border: 2px solid #333; background: #fff;">
+              <h3 style="margin-bottom: 10px;">Community</h3>
+              <div style="font-size: 12px; font-family: Arial, sans-serif; line-height: 1.6;">
+                <div style="margin: 5px 0;">🏆 You're #3 this week</div>
+                <div style="margin: 5px 0;">👥 234 active members</div>
+                <div style="margin: 5px 0;">🔥 Avg streak: 8 days</div>
+              </div>
+              <div class="button" style="width: calc(100% - 4px); margin-top: 10px; text-align: center; font-size: 12px;">
+                View Leaderboard →
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+          
+          <!-- Today's Focus Banner -->
+          <div style="position: relative; margin-bottom: 20px;">
+            <span class="badge badge-new" title="New component at frontend/components/dashboard/FocusBanner.tsx">[NEW] FocusBanner</span>
+            <div style="background: #f9f9f9; border: 3px solid #333; padding: 20px; text-align: center;">
+              <h3 style="font-size: 20px; margin-bottom: 10px;">Today's Focus: Keep the Streak Alive! 🔥</h3>
+              <p style="font-size: 14px; color: #666;">Complete your journal entry before midnight to maintain your 15-day streak</p>
+            </div>
+          </div>
+
+          <!-- Tab Navigation -->
+          <div class="tab-bar">
+            <div class="tab active">Today</div>
+            <div class="tab">Progress</div>
+            <div class="tab">Activity</div>
+          </div>
+
+          <!-- Today Tab Content -->
+          <div style="padding: 20px 0;">
+            
+            <!-- Today's Tasks -->
+            <div style="position: relative;">
+              <span class="badge badge-new" title="New component at frontend/components/dashboard/TodayTasks.tsx">[NEW] TodayTasks</span>
+              <h3 style="font-size: 18px; margin-bottom: 15px;">Today's Tasks (2/3 Complete) +30 XP</h3>
+              <div class="grid grid-3">
+                <div class="card" style="border-width: 3px; background: #f9f9f9;">
+                  <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div style="flex: 1;">
+                      <div style="font-weight: bold; margin-bottom: 5px;">Review infrastructure project PR</div>
+                      <div style="font-size: 11px; color: #666;">Career • +10 XP</div>
+                    </div>
+                    <div style="font-size: 20px;">✅</div>
+                  </div>
+                </div>
+                <div class="card" style="border-width: 3px; background: #f9f9f9;">
+                  <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div style="flex: 1;">
+                      <div style="font-weight: bold; margin-bottom: 5px;">Morning workout - Strength training</div>
+                      <div style="font-size: 11px; color: #666;">Health • +10 XP</div>
+                    </div>
+                    <div style="font-size: 20px;">✅</div>
+                  </div>
+                </div>
+                <div class="card">
+                  <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div style="flex: 1;">
+                      <div style="font-weight: bold; margin-bottom: 5px;">Continue ML project</div>
+                      <div style="font-size: 11px; color: #666;">Learning • +10 XP</div>
+                    </div>
+                    <div style="font-size: 20px; opacity: 0.3;">⬜</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Vision Board Preview -->
+            <div style="position: relative; margin-top: 30px;">
+              <span class="badge badge-reuse" title="frontend/components/boards/VisionBoard.tsx">[REUSE] VisionBoard</span>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="font-size: 18px;">Your Vision Board</h3>
+                <div class="button">View Full Board →</div>
+              </div>
+              
+              <div class="grid grid-2">
+                <div class="placeholder-img" style="height: 250px;">
+                  [Vision Board Preview]
+                  <br><br>
+                  Thumbnail of complete board
+                  <br>
+                  48% revealed
+                </div>
+                <div>
+                  <div class="grid grid-2">
+                    <div class="stat-card">
+                      <div style="font-size: 16px;">🔵</div>
+                      <div style="font-size: 20px; font-weight: bold; margin: 5px 0;">45%</div>
+                      <div style="font-size: 11px; color: #666;">Career</div>
+                    </div>
+                    <div class="stat-card">
+                      <div style="font-size: 16px;">🟢</div>
+                      <div style="font-size: 20px; font-weight: bold; margin: 5px 0;">30%</div>
+                      <div style="font-size: 11px; color: #666;">Health</div>
+                    </div>
+                    <div class="stat-card">
+                      <div style="font-size: 16px;">🟡</div>
+                      <div style="font-size: 20px; font-weight: bold; margin: 5px 0;">15%</div>
+                      <div style="font-size: 11px; color: #666;">Learning</div>
+                    </div>
+                    <div class="stat-card">
+                      <div style="font-size: 16px;">💗</div>
+                      <div style="font-size: 20px; font-weight: bold; margin: 5px 0;">6%</div>
+                      <div style="font-size: 11px; color: #666;">Relations</div>
+                    </div>
+                  </div>
+                  <div style="margin-top: 15px; padding: 15px; border: 2px solid #333;">
+                    <div style="font-size: 12px; font-weight: bold; margin-bottom: 5px;">Next Unlock</div>
+                    <div style="font-size: 11px; color: #666;">Complete today's journal to reveal more of your Career vision</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div style="position: relative; margin-top: 30px;">
+              <span class="badge badge-reuse" title="frontend/components/dashboard/ActivityFeed.tsx">[REUSE] ActivityFeed</span>
+              <h3 style="font-size: 18px; margin-bottom: 15px;">Recent Activity</h3>
+              
+              <div class="notification">
+                <div style="font-size: 20px;">✍️</div>
+                <div style="flex: 1;">
+                  <div style="font-size: 13px; font-weight: bold;">Journal entry completed</div>
+                  <div style="font-size: 11px; color: #666;">Reflection for January 18, 2026 • +75 pixels</div>
+                </div>
+                <div style="font-size: 11px; color: #999;">1 day ago</div>
+              </div>
+              
+              <div class="notification">
+                <div style="font-size: 20px;">🎯</div>
+                <div style="flex: 1;">
+                  <div style="font-size: 13px; font-weight: bold;">Task completed</div>
+                  <div style="font-size: 11px; color: #666;">Morning workout - Strength training</div>
+                </div>
+                <div style="font-size: 11px; color: #999;">1 day ago</div>
+              </div>
+              
+              <div class="notification">
+                <div style="font-size: 20px;">🏆</div>
+                <div style="flex: 1;">
+                  <div style="font-size: 13px; font-weight: bold;">Achievement unlocked</div>
+                  <div style="font-size: 11px; color: #666;">Week Warrior - 7 day streak</div>
+                </div>
+                <div style="font-size: 11px; color: #999;">2 days ago</div>
+              </div>
+              
+              <div class="button" style="width: calc(100% - 4px); text-align: center; margin-top: 10px;">
+                View All Activity →
+              </div>
+            </div>
+
+            <!-- Upcoming Milestones -->
+            <div style="position: relative; margin-top: 30px;">
+              <span class="badge badge-reuse" title="frontend/components/dashboard/NextMilestoneTeaser.tsx">[REUSE] NextMilestoneTeaser</span>
+              <h3 style="font-size: 18px; margin-bottom: 15px;">Upcoming Milestones</h3>
+              <div class="grid grid-3">
+                <div class="card">
+                  <div style="text-align: center;">
+                    <div style="font-size: 32px; margin-bottom: 10px;">🔥</div>
+                    <div style="font-weight: bold; margin-bottom: 5px;">30 Day Streak</div>
+                    <div style="font-size: 11px; color: #666;">15 more days</div>
+                  </div>
+                </div>
+                <div class="card">
+                  <div style="text-align: center;">
+                    <div style="font-size: 32px; margin-bottom: 10px;">⭐</div>
+                    <div style="font-weight: bold; margin-bottom: 5px;">Level 13</div>
+                    <div style="font-size: 11px; color: #666;">420 XP remaining</div>
+                  </div>
+                </div>
+                <div class="card">
+                  <div style="text-align: center;">
+                    <div style="font-size: 32px; margin-bottom: 10px;">🎨</div>
+                    <div style="font-weight: bold; margin-bottom: 5px;">50% Vision Complete</div>
+                    <div style="font-size: 11px; color: #666;">2% to go</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JOURNAL PAGE -->
+    <div class="section">
+      <h2>✍️ Journal Page (Streamlined Entry)</h2>
+      
+      <div class="grid grid-2">
+        <!-- Writing Area -->
+        <div style="grid-column: span 2;">
+          <div style="position: relative;">
+            <span class="badge badge-new" title="New component at frontend/components/journal/BalancedJournalForm.tsx">[NEW] BalancedJournalForm</span>
+            <div class="card">
+              <div style="text-align: center; margin-bottom: 20px;">
+                <h3 style="font-size: 24px;">How was your day?</h3>
+                <p style="font-size: 13px; color: #666;">Sunday, January 18, 2026</p>
+              </div>
+
+              <!-- Progress Indicators Row -->
+              <div style="display: flex; gap: 10px; margin-bottom: 20px; justify-content: center;">
+                <div style="text-align: center; padding: 10px; border: 2px solid #333; flex: 1;">
+                  <div style="font-size: 20px;">🔥</div>
+                  <div style="font-size: 11px; color: #666;">Maintain 15-day streak</div>
+                </div>
+                <div style="text-align: center; padding: 10px; border: 2px solid #333; flex: 1;">
+                  <div style="font-size: 20px;">⭐</div>
+                  <div style="font-size: 11px; color: #666;">Earn +50 XP</div>
+                </div>
+                <div style="text-align: center; padding: 10px; border: 2px solid #333; flex: 1;">
+                  <div style="font-size: 20px;">🎨</div>
+                  <div style="font-size: 11px; color: #666;">Unlock vision pixels</div>
+                </div>
+              </div>
+
+              <textarea style="width: 100%; min-height: 200px; border: 2px solid #999; padding: 15px; font-family: Georgia, serif; font-size: 14px; margin: 15px 0;" placeholder="Reflect on your day...&#10;&#10;• What did you complete?&#10;• What challenged you?&#10;• How do you feel about tomorrow?"></textarea>
+              
+              <!-- Today's Tasks Section -->
+              <div style="margin: 20px 0;">
+                <h3 style="margin-bottom: 10px;">Today's Tasks</h3>
+                <div class="box">
+                  <input type="checkbox" checked> <span style="text-decoration: line-through;">Review infrastructure project PR</span>
+                </div>
+                <div class="box">
+                  <input type="checkbox" checked> <span style="text-decoration: line-through;">Morning workout - Strength training</span>
+                </div>
+                <div class="box">
+                  <input type="checkbox"> <span>Continue ML project - Data preprocessing</span>
+                </div>
+              </div>
+
+              <!-- Optional Additions -->
+              <div style="border: 2px dashed #999; padding: 15px; margin: 20px 0;">
+                <h3 style="margin-bottom: 10px;">Enhancements (Optional)</h3>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                  <div class="button">📸 Add Photos</div>
+                  <div class="button">🎯 Set Tomorrow's Goal</div>
+                  <div class="button">💭 Add Notes</div>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <div class="button" style="flex: 1; text-align: center;">Save Draft</div>
+                <div class="button" style="flex: 2; text-align: center; font-weight: bold; border-width: 3px;">
+                  ✅ Complete Journal Entry
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOMAINS PAGE -->
+    <div class="section">
+      <h2>🎯 Life Domains Page</h2>
+      
+      <div style="position: relative;">
+        <span class="badge badge-reuse" title="frontend/components/domains/DomainList.tsx">[REUSE] DomainList</span>
+        <div class="grid grid-2">
+          <div class="card" style="border-width: 3px;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+              <div>
+                <div style="font-size: 24px; margin-bottom: 5px;">🔵 Career</div>
+                <h3 style="font-size: 20px;">Advance to senior engineering role and build technical leadership</h3>
+              </div>
+              <div class="button">Edit</div>
+            </div>
+            
+            <div class="placeholder-img" style="height: 200px;">
+              [Career Vision Images]
+              <br>
+              3 images showing career aspirations
+            </div>
+            
+            <div style="margin: 15px 0;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <span style="font-size: 13px; font-weight: bold;">Progress</span>
+                <span style="font-size: 13px; font-weight: bold;">45%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 45%;"></div>
+              </div>
+              <div style="font-size: 11px; color: #666; margin-top: 5px;">43,875 pixels • 23% colored this week</div>
+            </div>
+
+            <div style="border-top: 2px solid #ccc; padding-top: 15px; margin-top: 15px;">
+              <div style="font-size: 12px; color: #666; margin-bottom: 10px;">Recent Activity:</div>
+              <div style="font-size: 11px; line-height: 1.6;">
+                • Completed mentor session task (+10 XP)<br>
+                • Added new career vision image (+15 XP)<br>
+                • Achieved 25% milestone 🎉
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="border-width: 3px;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+              <div>
+                <div style="font-size: 24px; margin-bottom: 5px;">🟢 Health</div>
+                <h3 style="font-size: 20px;">Build functional strength, flexibility, and sustainable fitness habits</h3>
+              </div>
+              <div class="button">Edit</div>
+            </div>
+            
+            <div class="placeholder-img" style="height: 200px;">
+              [Health Vision Images]
+              <br>
+              2 images showing fitness goals
+            </div>
+            
+            <div style="margin: 15px 0;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <span style="font-size: 13px; font-weight: bold;">Progress</span>
+                <span style="font-size: 13px; font-weight: bold;">30%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 30%;"></div>
+              </div>
+              <div style="font-size: 11px; color: #666; margin-top: 5px;">29,250 pixels • 15% colored this week</div>
+            </div>
+
+            <div style="border-top: 2px solid #ccc; padding-top: 15px; margin-top: 15px;">
+              <div style="font-size: 12px; color: #666; margin-bottom: 10px;">Recent Activity:</div>
+              <div style="font-size: 11px; line-height: 1.6;">
+                • Completed strength training (+10 XP)<br>
+                • 5-day workout streak maintained 🔥
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+              <div>
+                <div style="font-size: 24px; margin-bottom: 5px;">🟡 Learning</div>
+                <h3 style="font-size: 20px;">Master machine learning fundamentals and data science</h3>
+              </div>
+              <div class="button">Edit</div>
+            </div>
+            
+            <div class="placeholder-img" style="height: 200px;">
+              [Learning Vision Images]
+              <br>
+              2 images showing learning goals
+            </div>
+            
+            <div style="margin: 15px 0;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <span style="font-size: 13px; font-weight: bold;">Progress</span>
+                <span style="font-size: 13px; font-weight: bold;">15%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 15%;"></div>
+              </div>
+              <div style="font-size: 11px; color: #666; margin-top: 5px;">14,625 pixels • 10% colored this week</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+              <div>
+                <div style="font-size: 24px; margin-bottom: 5px;">💗 Relationships</div>
+                <h3 style="font-size: 20px;">Deepen connections with family and friends</h3>
+              </div>
+              <div class="button">Edit</div>
+            </div>
+            
+            <div class="placeholder-img" style="height: 200px;">
+              [Relationship Vision Images]
+              <br>
+              1 image showing relationship goals
+            </div>
+            
+            <div style="margin: 15px 0;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <span style="font-size: 13px; font-weight: bold;">Progress</span>
+                <span style="font-size: 13px; font-weight: bold;">6%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 6%;"></div>
+              </div>
+              <div style="font-size: 11px; color: #666; margin-top: 5px;">9,750 pixels • 6% colored this week</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+          <div class="button" style="font-size: 16px; padding: 12px 24px;">+ Create New Life Domain</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KEY FEATURES -->
+    <div class="section">
+      <h2>🌟 Key Balanced Features</h2>
+      <ul style="font-family: Arial, sans-serif; line-height: 1.8; margin-left: 20px;">
+        <li><strong>Gamification:</strong> XP, levels, and streaks provide motivation without being overwhelming</li>
+        <li><strong>Visual Progress:</strong> Beautiful vision board with clear progress indicators</li>
+        <li><strong>Simple UX:</strong> Clean sidebar navigation, tabbed interface, one-click actions</li>
+        <li><strong>Social Features:</strong> Community widget, leaderboard, achievement sharing (opt-in)</li>
+        <li><strong>Activity Feed:</strong> Chronological history of all actions and achievements</li>
+        <li><strong>Quick Actions:</strong> Sidebar buttons for common tasks - no hunting through menus</li>
+        <li><strong>Focus System:</strong> "Today's Focus" banner guides users to high-priority actions</li>
+        <li><strong>Milestone Tracking:</strong> Clear view of upcoming achievements to work towards</li>
+        <li><strong>Flexible Journaling:</strong> Core reflection + optional enhancements (photos, notes, goals)</li>
+        <li><strong>Domain Management:</strong> Dedicated page to manage each life area with rich detail</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>🎯 Design Philosophy</h2>
+      <ul style="font-family: Arial, sans-serif; line-height: 1.8; margin-left: 20px;">
+        <li><strong>Balanced approach:</strong> No single feature dominates - gamification, visuals, simplicity, and social all work together</li>
+        <li><strong>Professional aesthetic:</strong> Clean and modern design suitable for serious goal-achievers</li>
+        <li><strong>Progressive disclosure:</strong> Advanced features available but not in your face</li>
+        <li><strong>Consistent patterns:</strong> Similar UI elements across pages for easy learning</li>
+        <li><strong>Mobile-ready:</strong> Sidebar collapses, tabs stack, grids reflow</li>
+        <li><strong>Data-driven:</strong> Every action tracked and visualized for insights</li>
+        <li><strong>Flexibility:</strong> Users can engage with features they like, ignore others</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>📱 Responsive Behavior</h2>
+      <ul style="font-family: Arial, sans-serif; line-height: 1.8; margin-left: 20px;">
+        <li>Sidebar becomes collapsible hamburger menu on mobile</li>
+        <li>Split-view layouts stack vertically on smaller screens</li>
+        <li>Grid layouts adapt from 4→3→2→1 columns based on screen size</li>
+        <li>Bottom navigation bar on mobile for quick access to core features</li>
+        <li>Swipe gestures for tab navigation and task completion</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

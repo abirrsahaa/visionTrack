@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Smile, Paperclip, Send } from "lucide-react";
+import { Smile, Paperclip, Send, Loader2, Sparkles } from "lucide-react";
 import { format } from "date-fns";
-import { SystemButton } from "@/components/shared/SystemButton";
+import { cn } from "@/lib/utils/cn";
 
 interface NightJournalPanelProps {
   initialText?: string;
@@ -18,6 +18,7 @@ export function NightJournalPanel({
   isLoading = false,
 }: NightJournalPanelProps) {
   const [journalText, setJournalText] = useState(initialText);
+  const [isFocused, setIsFocused] = useState(false);
   const today = format(new Date(), "yyyy_MM_dd");
 
   // Auto-save to localStorage
@@ -46,58 +47,87 @@ export function NightJournalPanel({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col h-full space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-semibold text-foreground-secondary uppercase tracking-wider">
-          NIGHT JOURNAL // REFLECTIONS
-        </h3>
-        <span className="text-[10px] text-foreground-tertiary">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-purple animate-pulse" />
+          <h3 className="text-xs font-bold text-foreground-secondary uppercase tracking-widest leading-none">
+            Mission Log
+          </h3>
+        </div>
+        <span className="text-[10px] font-mono text-purple-400 border border-purple/20 bg-purple/10 px-2 py-0.5 rounded">
           ENTRY_{today}
         </span>
       </div>
 
-      {/* Textarea */}
-      <div className="relative">
-        <motion.textarea
-          value={journalText}
-          onChange={(e) => setJournalText(e.target.value)}
-          placeholder="Describe the friction and the flow of today..."
-          rows={8}
-          className="w-full bg-background-tertiary border border-gray-200 rounded-lg p-4 font-sans text-sm text-foreground placeholder-foreground-tertiary resize-none focus:outline-none focus:ring-2 focus:ring-purple focus:border-purple transition-all shadow-sm"
-          whileFocus={{ scale: 1.005 }}
-        />
-      </div>
+      {/* Editor Container */}
+      <div className={cn(
+        "relative flex-1 rounded-xl overflow-hidden transition-all duration-300 group",
+        "bg-[#080808] border",
+        isFocused ? "border-purple/50 shadow-[0_0_30px_rgba(168,85,247,0.1)]" : "border-white/10"
+      )}>
+        {/* Decorative Grid */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none" />
 
-      {/* Bottom Bar */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <motion.button
-            className="p-2 text-foreground-tertiary hover:text-foreground transition-colors rounded-lg hover:bg-background-secondary"
-            whileHover={{ scale: 1.1, rotate: 15 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <Smile className="w-4 h-4" />
-          </motion.button>
-          <motion.button
-            className="p-2 text-foreground-tertiary hover:text-foreground transition-colors rounded-lg hover:bg-background-secondary"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <Paperclip className="w-4 h-4" />
-          </motion.button>
+        {/* Left Gutter */}
+        <div className="absolute top-0 bottom-0 left-0 w-8 bg-white/5 border-r border-white/5 flex flex-col items-center py-4 gap-2 z-10">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+            <span key={i} className="text-[10px] font-mono text-gray-700">{i}</span>
+          ))}
         </div>
 
-        <SystemButton
-          variant="gradient-purple"
+        <textarea
+          value={journalText}
+          onChange={(e) => setJournalText(e.target.value)}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          placeholder="// Describe the friction and the flow..."
+          className="w-full h-full bg-transparent p-4 pl-12 font-mono text-sm text-gray-300 placeholder-gray-700 resize-none focus:outline-none leading-relaxed custom-scrollbar relative z-20"
+        />
+
+        {/* Blinking Cursor Decoration (only visible when not focused or empty to encourage typing) */}
+        {!isFocused && !journalText && (
+          <motion.div
+            animate={{ opacity: [0, 1, 0] }}
+            transition={{ duration: 1, repeat: Infinity }}
+            className="absolute top-4 left-12 w-2 h-5 bg-purple pointer-events-none z-10"
+          />
+        )}
+      </div>
+
+      {/* Control Bar */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <button className="p-2 rounded-lg hover:bg-white/5 text-gray-500 hover:text-white transition-colors">
+            <Smile className="w-4 h-4" />
+          </button>
+          <button className="p-2 rounded-lg hover:bg-white/5 text-gray-500 hover:text-white transition-colors">
+            <Paperclip className="w-4 h-4" />
+          </button>
+        </div>
+
+        <motion.button
           onClick={handleSubmit}
           disabled={!journalText.trim() || isLoading}
-          isLoading={isLoading}
-          className="flex items-center gap-2"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className={cn(
+            "flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider transition-all",
+            !journalText.trim() || isLoading
+              ? "bg-white/5 text-gray-600 cursor-not-allowed"
+              : "bg-purple hover:bg-purple-600 text-white shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:shadow-[0_0_30px_rgba(168,85,247,0.6)]"
+          )}
         >
-          <Send className="w-4 h-4" />
-          COMMIT REFLECTION & AWARD PIXELS
-        </SystemButton>
+          {isLoading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4" />
+              <span>Upload to Core</span>
+            </>
+          )}
+        </motion.button>
       </div>
     </div>
   );

@@ -17,33 +17,39 @@ export function PixelatedBoard({
   showCheckpoints = false,
 }: PixelatedBoardProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // State for image loading
   const [isLoading, setIsLoading] = useState(true);
   const [loadedImages, setLoadedImages] = useState<Map<string, HTMLImageElement>>(new Map());
 
-  // Better canvas dimensions - higher resolution for better quality
+  // Animation Refs
+  const animationRef = useRef<number>();
+  const [debugPhase, setDebugPhase] = useState<string>('init');
+
+  // Canvas Dimensions
   const canvasWidth = 1920;
   const canvasHeight = 1080;
-  const gridCols = Math.floor(canvasWidth / pixelSize);
-  const gridRows = Math.floor(canvasHeight / pixelSize);
 
-  // Load all domain images
+  // Load Images Logic
   useEffect(() => {
+    let isMounted = true;
     const loadAllImages = async () => {
       const imageMap = new Map<string, HTMLImageElement>();
       const loadPromises: Promise<void>[] = [];
 
       domains.forEach((domain) => {
         domain.images.forEach((img, idx) => {
-          const loadPromise = new Promise<void>((resolve, reject) => {
+          const loadPromise = new Promise<void>((resolve) => {
             const image = new window.Image();
             image.crossOrigin = "anonymous";
             image.onload = () => {
-              imageMap.set(`${domain.id}_${idx}`, image);
+              if (isMounted) imageMap.set(`${domain.id}_${idx}`, image);
               resolve();
             };
             image.onerror = () => {
               console.warn(`Failed to load image for ${domain.name}`);
-              resolve(); // Continue even if image fails
+              resolve();
             };
             image.src = img.imageUrl;
           });
@@ -52,16 +58,17 @@ export function PixelatedBoard({
       });
 
       await Promise.all(loadPromises);
-      setLoadedImages(imageMap);
-      setIsLoading(false);
+      if (isMounted) {
+        setLoadedImages(imageMap);
+        setIsLoading(false);
+      }
     };
 
-    if (domains.length > 0) {
-      loadAllImages();
-    }
+    if (domains.length > 0) loadAllImages();
+    return () => { isMounted = false; };
   }, [domains]);
 
-  // Render pixelated board with progressive colorization
+  // Main Canvas & Animation Logic
   useEffect(() => {
     if (!canvasRef.current || isLoading || loadedImages.size === 0) return;
 
@@ -72,440 +79,482 @@ export function PixelatedBoard({
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
 
-    // Clear canvas with subtle gradient background
-    const gradient = ctx.createLinearGradient(0, 0, canvasWidth, canvasHeight);
-    gradient.addColorStop(0, "#f8f9fa");
-    gradient.addColorStop(1, "#e9ecef");
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+    // --- 1. Prepare Layers (Offscreen Canvases) ---
+    // Layer 1: Grayscale Base (The "faded" reality)
+    const grayCanvas = document.createElement("canvas");
+    grayCanvas.width = canvasWidth;
+    grayCanvas.height = canvasHeight;
+    const grayCtx = grayCanvas.getContext("2d");
 
-    // Calculate layout based on board type
+    // Layer 2: Full Color Target (The "Vision")
+    const colorCanvas = document.createElement("canvas");
+    colorCanvas.width = canvasWidth;
+    colorCanvas.height = canvasHeight;
+    const colorCtx = colorCanvas.getContext("2d");
+
+    if (!grayCtx || !colorCtx) return;
+
+    // --- 2. Compose the Board Layout on Layers ---
     const layout = calculateLayout(board.boardType, domains, canvasWidth, canvasHeight);
 
-    // Calculate completion percentages per domain
-    const totalPixelsPerDomain = board.totalPixels / domains.length;
-    const domainCompletions = new Map<string, number>();
-    
-    board.layoutMetadata.domains.forEach((domainData) => {
-      const completionRate = Math.min(
-        domainData.pixels.length / totalPixelsPerDomain,
-        1
-      );
-      domainCompletions.set(domainData.domainId, completionRate);
-    });
-
-    // Draw all domain images with progressive colorization
-    layout.forEach((item, index) => {
+    // Draw the static board content onto Color and Gray layers
+    // We do this ONCE to save performance
+    layout.forEach((item) => {
       const domain = domains.find((d) => d.id === item.domainId);
-      if (!domain || domain.images.length === 0) return;
+      if (!domain) return;
 
-      const completionRate = domainCompletions.get(domain.id) || 0;
+      // Determine which image(s) to draw
+      // For simplicity reusing the weekly/monthly logic from before but customized for layers
+      // Using "cover" logic manually similar to previous implementation
 
-      // For weekly boards, use single image per domain (fits strip better)
       if (board.boardType === "weekly" || domain.images.length === 1) {
-        const key = `${domain.id}_0`;
-        const domainImage = loadedImages.get(key);
-        if (domainImage) {
-          drawProgressivelyColoredImage(
-            ctx,
-            domainImage,
-            item.x,
-            item.y,
-            item.width,
-            item.height,
-            completionRate,
-            pixelSize,
-            true // use cover for better fitting
-          );
+        const img = loadedImages.get(`${domain.id}_0`);
+        if (img) {
+          drawImageToContext(colorCtx, img, item.x, item.y, item.width, item.height);
+          drawImageToContext(grayCtx, img, item.x, item.y, item.width, item.height, true); // grayscale
         } else {
-          // Fallback placeholder with domain color
-          const gradient = ctx.createLinearGradient(item.x, item.y, item.x + item.width, item.y + item.height);
-          gradient.addColorStop(0, domain.colorHex + "30");
-          gradient.addColorStop(1, domain.colorHex + "10");
-          ctx.fillStyle = gradient;
-          ctx.fillRect(item.x, item.y, item.width, item.height);
-          
-          // Add domain name text
-          ctx.save();
-          ctx.fillStyle = domain.colorHex + "80";
-          ctx.font = `bold ${item.height / 8}px sans-serif`;
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText(
-            domain.name,
-            item.x + item.width / 2,
-            item.y + item.height / 2
-          );
-          ctx.restore();
+          // Fallback placeholder
+          drawPlaceholder(colorCtx, item, domain.colorHex, domain.name, false);
+          drawPlaceholder(grayCtx, item, domain.colorHex, domain.name, true);
         }
       } else {
-        // For monthly/annual: Handle multiple images per domain
+        // Multi-image layout
         const imageCount = Math.min(domain.images.length, 4);
         const subCols = Math.ceil(Math.sqrt(imageCount));
-        const subRows = Math.ceil(imageCount / subCols);
-        const subWidth = item.width / subCols;
+        const subColsCalc = subCols > 0 ? subCols : 1;
+        const subRows = Math.ceil(imageCount / subColsCalc);
+        const subWidth = item.width / subColsCalc;
         const subHeight = item.height / subRows;
 
-        domain.images.slice(0, imageCount).forEach((img, imgIdx) => {
-          const subCol = imgIdx % subCols;
-          const subRow = Math.floor(imgIdx / subCols);
+        domain.images.slice(0, imageCount).forEach((imgObj, imgIdx) => {
+          const subCol = imgIdx % subColsCalc;
+          const subRow = Math.floor(imgIdx / subColsCalc);
           const subX = item.x + subCol * subWidth;
           const subY = item.y + subRow * subHeight;
 
-          const key = `${domain.id}_${img.sortOrder - 1}`;
-          const domainImage = loadedImages.get(key);
-          if (domainImage) {
-            drawProgressivelyColoredImage(
-              ctx,
-              domainImage,
-              subX,
-              subY,
-              subWidth,
-              subHeight,
-              completionRate,
-              pixelSize,
-              true
-            );
+          const img = loadedImages.get(`${domain.id}_${imgObj.sortOrder - 1}`);
+          if (img) {
+            drawImageToContext(colorCtx, img, subX, subY, subWidth, subHeight);
+            drawImageToContext(grayCtx, img, subX, subY, subWidth, subHeight, true);
           }
         });
       }
     });
 
-    // Draw subtle pixelated grid overlay
-    drawPixelatedGrid(ctx, gridCols, gridRows, pixelSize, canvasWidth, canvasHeight);
-  }, [board, domains, isLoading, loadedImages, pixelSize, canvasWidth, canvasHeight, gridCols, gridRows]);
+    // Draw Pixel Grid Lines on both (optional, maybe just on final canvas)
+    drawPixelatedGrid(grayCtx, canvasWidth, canvasHeight, pixelSize, "rgba(255,255,255,0.05)");
+    drawPixelatedGrid(colorCtx, canvasWidth, canvasHeight, pixelSize, "rgba(255,255,255,0.1)");
 
+
+    // --- 3. Animation State Setup ---
+    const gridCols = Math.ceil(canvasWidth / pixelSize);
+    const gridRows = Math.ceil(canvasHeight / pixelSize);
+    const totalGridPixels = gridCols * gridRows;
+
+    // Generate Shuffled Grid Indices for "Random" Filling
+    const indices = new Uint32Array(totalGridPixels);
+    for (let i = 0; i < totalGridPixels; i++) indices[i] = i;
+    // Fisher-Yates Shuffle
+    for (let i = totalGridPixels - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const temp = indices[i];
+      indices[i] = indices[j];
+      indices[j] = temp;
+    }
+
+    // Animation Config
+    const overallCompletionRate = board.totalPixels > 0 ? (board.coloredPixels / board.totalPixels) : 0;
+    const targetPixelCount = Math.floor(totalGridPixels * overallCompletionRate);
+
+    // Animation Variables
+    let currentPhase: 'filling' | 'holding' | 'blinking' | 'resetting' = 'filling';
+    let visiblePixels = 0;
+    let holdStartTime = 0;
+    let blinkStartTime = 0;
+
+    const FILL_SPEED = 500; // Pixels per frame (adjust for speed)
+    const HOLD_DURATION = 3000; // ms
+    const BLINK_DURATION = 400; // ms (Quick flash of future)
+
+    // Mask Canvas (Offscreen) - This determines what parts of Color Layer are visible
+    // We only need 1 channel (alpha), but standard canvas is RGBA.
+    const maskCanvas = document.createElement('canvas');
+    maskCanvas.width = canvasWidth;
+    maskCanvas.height = canvasHeight;
+    const maskCtx = maskCanvas.getContext('2d');
+    if (!maskCtx) return;
+
+    ctx.imageSmoothingEnabled = false;
+
+    // --- 4. The Animation Loop ---
+    const renderLoop = (timestamp: number) => {
+      // Clear Main Canvas
+      // Draw Grayscale Base Layer first (always visible underneath)
+      ctx.drawImage(grayCanvas, 0, 0);
+
+      // Update State Logic
+      if (currentPhase === 'filling') {
+        visiblePixels += FILL_SPEED;
+        if (visiblePixels >= targetPixelCount) {
+          visiblePixels = targetPixelCount;
+          currentPhase = 'holding';
+          holdStartTime = timestamp;
+        }
+      }
+      else if (currentPhase === 'holding') {
+        if (timestamp - holdStartTime > HOLD_DURATION) {
+          currentPhase = 'blinking';
+          blinkStartTime = timestamp;
+        }
+      }
+      else if (currentPhase === 'blinking') {
+        if (timestamp - blinkStartTime > BLINK_DURATION) {
+          currentPhase = 'resetting';
+          visiblePixels = 0; // Reset
+        }
+      }
+      else if (currentPhase === 'resetting') {
+        // Instant restart or smooth restart? Let's do instant loop
+        currentPhase = 'filling';
+      }
+
+      setDebugPhase(currentPhase); // For debug overlay
+
+      // Draw Mask
+      // Determine how many pixels to show on the mask
+      // If blinking, show ALL pixels (Future Glimpse!)
+      const pixelsDrawingCount = currentPhase === 'blinking' ? totalGridPixels : visiblePixels;
+
+      // Optimizing Mask Update:
+      // Instead of redrawing the whole mask every frame, we could just ADD to it.
+      // But for the 'blinking' to 'resetting' transition, we need to clear it.
+
+      // Strategy: 
+      // 1. If phase switched to 'filling' (from reset), clear mask.
+      // 2. Add new pixels since last frame.
+
+      // However, standard immediate mode style:
+      // Let's rely on the fact that we can just iterate indices up to pixelsDrawingCount.
+      // Note: Iterating 2 million items in JS every frame is slow.
+      // Optimization: Draw chunks on the mask canvas and keep it persistent?
+      // YES.
+
+      // PERSISTENT MASK STRATEGY:
+      // We only modify `maskCtx` when `visiblePixels` increases.
+      // When 'blinking', we overlay a full fill without modifying the underlying 'progress mask' (or we use a temp override).
+      // Actually, let's just use `maskCtx` for the "Progress" and handle blink separately.
+
+      // Update Mask Canvas (Progressive Fill)
+      // We track `lastRenderedPixelCount` in a closure variable outside valid for the loop?
+      // Let's refactor loop vars slightly.
+    };
+
+    // Efficient Loop State
+    let lastRenderedCount = 0;
+
+    const persistentMaskLoop = (timestamp: number) => {
+      // A. State Updates
+      if (currentPhase === 'filling') {
+        visiblePixels += Math.ceil(totalGridPixels / 120); // Finish in ~2 seconds (at 60fps)
+        if (visiblePixels >= targetPixelCount) {
+          visiblePixels = targetPixelCount;
+          currentPhase = 'holding';
+          holdStartTime = timestamp;
+        }
+      } else if (currentPhase === 'holding') {
+        if (timestamp - holdStartTime > HOLD_DURATION) {
+          currentPhase = 'blinking';
+          blinkStartTime = timestamp;
+        }
+      } else if (currentPhase === 'blinking') {
+        if (timestamp - blinkStartTime > BLINK_DURATION) {
+          currentPhase = 'resetting';
+        }
+      } else if (currentPhase === 'resetting') {
+        currentPhase = 'filling';
+        visiblePixels = 0;
+        lastRenderedCount = 0;
+        maskCtx.clearRect(0, 0, canvasWidth, canvasHeight); // Clear mask
+      }
+
+      // B. Update Mask (Incremental)
+      if (currentPhase === 'filling' && visiblePixels > lastRenderedCount) {
+        maskCtx.fillStyle = '#000000'; // Color doesn't matter for masking, fully opaque
+        // Draw new pixels
+        // Batch drawing is faster (beginPath / rect / fill)
+        maskCtx.beginPath();
+        for (let i = lastRenderedCount; i < visiblePixels; i++) {
+          if (i >= totalGridPixels) break;
+          const idx = indices[i];
+          const x = (idx % gridCols) * pixelSize;
+          const y = Math.floor(idx / gridCols) * pixelSize;
+          maskCtx.rect(x, y, pixelSize, pixelSize);
+        }
+        maskCtx.fill();
+        lastRenderedCount = visiblePixels;
+      }
+
+      // C. Composition
+      // 1. Draw Gray Background
+      ctx.drawImage(grayCanvas, 0, 0);
+
+      // 2. Prepare to Draw Color Layer masked by Mask Layer
+      ctx.save();
+
+      // If blinking, we ignore the mask and just show FULL color (maybe with some opacity flicker?)
+      if (currentPhase === 'blinking') {
+        // Future Glimpse Mode!
+        ctx.globalAlpha = 0.9 + Math.random() * 0.1; // Slight flicker
+        ctx.drawImage(colorCanvas, 0, 0);
+
+        // Add a "Pure White" flash overlay at the start of blink?
+        if (timestamp - blinkStartTime < 50) {
+          ctx.fillStyle = 'white';
+          ctx.globalAlpha = 0.3;
+          ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        }
+      } else {
+        // Standard Progress Mode
+        // We need to apply the mask.
+        // Canvas logic: destination-in keeps destination where source overlaps.
+        // But we want to draw Color *masked by* Mask.
+        // Easiest: Draw Mask first (opaque), then draw Color with 'source-in'?
+        // No, that replaces the canvas content.
+        // We need an intermediate buffer for the masked color layer if we want to composit over gray.
+
+        // Option: 
+        // 1. Create a temp layer.
+        // 2. Draw Color Layer.
+        // 3. Draw Mask Layer with 'destination-in' (keeps color only where mask is).
+        // 4. Draw temp layer onto Main Context.
+
+        // BUT creating a 1920x1080 canvas every frame is DEATH for Perf.
+        // Solution: Using 'clip' from the mask? Path based clipping is slow for millions of rects.
+
+        // Optimized Composition:
+        // Main Ctx already has Gray.
+        // We want to draw Color on top, but restricted to Mask pixels.
+        // Since Mask is just black pixels on transparency...
+        // We can assume pixels align?
+
+        // Efficient way without limited layers:
+        // 1. Draw Gray on Main.
+        // 2. Draw Color on Main.
+        // 3. Draw "Inverse Mask" to erase Color revealing Gray?? Hard.
+
+        // Back to Temp Canvas (re-used):
+        // We need ONE persistent temp canvas.
+        // See 'compositionCanvas' below.
+      }
+      ctx.restore();
+
+      if (currentPhase !== 'blinking') {
+        drawMaskedColorLayer();
+      }
+
+      // Debug/Overlay info
+      // (Handled by React UI overlay, not canvas)
+
+      animationRef.current = requestAnimationFrame(persistentMaskLoop);
+    };
+
+    // Temp Composition Canvas (Created once)
+    const compCanvas = document.createElement('canvas');
+    compCanvas.width = canvasWidth;
+    compCanvas.height = canvasHeight;
+    const compCtx = compCanvas.getContext('2d');
+
+    const drawMaskedColorLayer = () => {
+      if (!compCtx) return;
+      // Clear temp
+      compCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+      // 1. Draw the Mask (The shape we want)
+      compCtx.drawImage(maskCanvas, 0, 0);
+
+      // 2. Draw the Color Image source-in (ONLY keep color where mask exists)
+      compCtx.globalCompositeOperation = 'source-in';
+      compCtx.drawImage(colorCanvas, 0, 0);
+
+      // 3. Reset Composite
+      compCtx.globalCompositeOperation = 'source-over';
+
+      // 4. Draw result onto Main Canvas (on top of Gray)
+      ctx.drawImage(compCanvas, 0, 0);
+    };
+
+    // Start Loop
+    animationRef.current = requestAnimationFrame(persistentMaskLoop);
+
+    return () => {
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+    };
+
+  }, [board, domains, isLoading, loadedImages, pixelSize]);
+
+  // Calculations for UI Overlay
   const completionPercentage = board.totalPixels > 0
     ? Math.round((board.coloredPixels / board.totalPixels) * 100)
     : 0;
 
   return (
-    <div className="relative w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden shadow-lg border border-gray-200">
-      {isLoading ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm z-10">
+    <div className="relative w-full h-full bg-background-tertiary rounded-xl overflow-hidden shadow-2xl border border-white/5 group">
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/90 backdrop-blur-sm z-20">
           <div className="text-center">
-            <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-            <p className="mt-4 text-gray-600 font-medium">Loading domain images...</p>
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-purple border-r-transparent"></div>
+            <p className="mt-4 text-xs font-mono text-purple-400 animate-pulse">INITIALIZING VISION...</p>
           </div>
         </div>
-      ) : null}
-      
+      )}
+
       <canvas
         ref={canvasRef}
-        className="w-full h-full object-contain"
-        style={{ imageRendering: "high-quality" as any }}
+        className="w-full h-full object-cover"
+        style={{ imageRendering: "pixelated" }} // Crisp pixels
       />
-      
+
+      {/* Cinematic Overlay - On Hover or Always? Let's make it clean. */}
+      {/* VIGNETTE */}
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_50%,rgba(0,0,0,0.6)_100%)]" />
+
       {/* Enhanced Progress Overlay */}
-      <div className="absolute bottom-6 left-6 bg-white/95 backdrop-blur-md px-5 py-3 rounded-xl shadow-xl border border-gray-200/50">
-        <div className="flex items-center justify-between gap-4 mb-2">
-          <p className="text-sm font-semibold text-gray-900">Overall Progress</p>
-          <span className="text-lg font-bold text-gray-900">{completionPercentage}%</span>
-        </div>
-        <div className="w-64 h-3 bg-gray-200 rounded-full overflow-hidden shadow-inner">
-          <div
-            className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-700 rounded-full"
-            style={{ width: `${completionPercentage}%` }}
-          />
-        </div>
-        <p className="text-xs text-gray-500 mt-2">
-          {board.coloredPixels.toLocaleString()} / {board.totalPixels.toLocaleString()} pixels
-        </p>
-      </div>
+      <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
+        <div className="flex items-end justify-between">
+          <div>
+            <p className="text-[10px] text-purple-300 font-mono tracking-widest uppercase mb-1">
+              Overall Progress
+            </p>
+            <div className="flex items-baseline gap-2">
+              <span className="text-4xl font-bold text-white tracking-tighter shadow-black drop-shadow-lg">
+                {completionPercentage}%
+              </span>
+              <span className="text-xs text-gray-400 font-mono mb-1">
+                CURRENT MANIFESTATION
+              </span>
+            </div>
 
-      {/* Enhanced Domain Labels Overlay */}
-      {domains.length > 0 && (
-        <div className="absolute top-6 right-6 flex flex-col gap-3">
-          {domains.map((domain) => {
-            const domainData = board.layoutMetadata.domains.find((d) => d.domainId === domain.id);
-            const domainCompletion = domainData
-              ? domainData.pixels.length / (board.totalPixels / domains.length)
-              : 0;
-            const domainPercentage = Math.round(domainCompletion * 100);
-
-            return (
+            {/* Pixel Bar */}
+            <div className="w-64 h-1.5 bg-white/10 rounded-full mt-2 overflow-hidden">
               <div
-                key={domain.id}
-                className="bg-white/95 backdrop-blur-md px-4 py-3 rounded-xl shadow-lg border border-gray-200/50 min-w-[160px] transition-all hover:shadow-xl hover:scale-105"
-              >
-                <div className="flex items-center gap-3 mb-2">
-                  <div
-                    className="w-4 h-4 rounded-full shadow-sm border-2 border-white"
-                    style={{ backgroundColor: domain.colorHex }}
-                  />
-                  <p className="font-semibold text-gray-900 text-sm">{domain.name}</p>
-                </div>
-                <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div
-                    className="h-full transition-all duration-500 rounded-full"
-                    style={{
-                      width: `${domainPercentage}%`,
-                      backgroundColor: domain.colorHex,
-                    }}
-                  />
-                </div>
-                <p className="text-xs text-gray-600 mt-1.5 font-medium">{domainPercentage}% colored</p>
-              </div>
-            );
-          })}
+                className="h-full bg-gradient-to-r from-purple-500 via-orange-500 to-pink-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]"
+                style={{ width: `${completionPercentage}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Future Blink Indicator */}
+          <div className="flex flex-col items-end">
+            <div className={`px-2 py-0.5 rounded border border-purple-500/30 bg-purple-500/10 backdrop-blur text-[10px] font-mono text-purple-300 transition-opacity duration-300 ${debugPhase === 'blinking' ? 'opacity-100' : 'opacity-0'}`}>
+              FUTURE GLIMPSE ACTIVE
+            </div>
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
-// Draw image with progressive colorization (X% colored, rest grayscale)
-// Improved to handle aspect ratio and fitting better
-function drawProgressivelyColoredImage(
+// Helpers
+function drawImageToContext(
   ctx: CanvasRenderingContext2D,
   image: HTMLImageElement,
   x: number,
   y: number,
   width: number,
   height: number,
-  completionRate: number, // 0.0 to 1.0
-  pixelSize: number,
-  useCover: boolean = false // Use cover mode for better image fitting
+  grayscale: boolean = false
 ) {
   ctx.save();
 
-  // Create a temporary canvas for processing
-  const tempCanvas = document.createElement("canvas");
-  tempCanvas.width = width;
-  tempCanvas.height = height;
-  const tempCtx = tempCanvas.getContext("2d");
-  if (!tempCtx) {
-    ctx.restore();
-    return;
-  }
+  // Aspect Ratio "Cover" Logic
+  const imgAspect = image.width / image.height;
+  const rectAspect = width / height;
+  let drawWidth = width;
+  let drawHeight = height;
+  let drawX = 0;
+  let drawY = 0;
 
-  // Draw image with proper aspect ratio (cover mode)
-  if (useCover) {
-    const imgAspect = image.width / image.height;
-    const rectAspect = width / height;
-    
-    let drawWidth = width;
-    let drawHeight = height;
-    let drawX = 0;
-    let drawY = 0;
-
-    if (imgAspect > rectAspect) {
-      // Image is wider - fit to height, crop width
-      drawHeight = height;
-      drawWidth = height * imgAspect;
-      drawX = (width - drawWidth) / 2;
-    } else {
-      // Image is taller - fit to width, crop height
-      drawWidth = width;
-      drawHeight = width / imgAspect;
-      drawY = (height - drawHeight) / 2;
-    }
-
-    tempCtx.drawImage(image, drawX, drawY, drawWidth, drawHeight);
+  if (imgAspect > rectAspect) {
+    drawHeight = height;
+    drawWidth = height * imgAspect;
+    drawX = (width - drawWidth) / 2;
   } else {
-    tempCtx.drawImage(image, 0, 0, width, height);
+    drawWidth = width;
+    drawHeight = width / imgAspect;
+    drawY = (height - drawHeight) / 2;
   }
 
-  // Step 1: Get the full color image data
-  const colorImageData = tempCtx.getImageData(0, 0, width, height);
+  // Clip to region
+  ctx.beginPath();
+  ctx.rect(x, y, width, height);
+  ctx.clip();
 
-  // Step 2: Create grayscale version
-  const grayImageData = tempCtx.createImageData(width, height);
-  const colorData = colorImageData.data;
-  const grayData = grayImageData.data;
+  ctx.drawImage(image, x + drawX, y + drawY, drawWidth, drawHeight);
 
-  for (let i = 0; i < colorData.length; i += 4) {
-    const gray = Math.round(
-      colorData[i] * 0.299 + colorData[i + 1] * 0.587 + colorData[i + 2] * 0.114
-    );
-    grayData[i] = gray; // R
-    grayData[i + 1] = gray; // G
-    grayData[i + 2] = gray; // B
-    grayData[i + 3] = colorData[i + 3]; // A
+  if (grayscale) {
+    // Apply grayscale filter on top? 
+    // Context filter property is easiest but sometimes slow.
+    // Or manual pixel manip.
+    // Let's use 'saturation' composite for older browsers or filter for modern.
+    // Standard approach: get data and desaturate.
+    // Optimized: draw with filter.
+    ctx.globalCompositeOperation = "saturation";
+    ctx.fillStyle = "hsl(0,0%,50%)";
+    ctx.fillRect(x, y, width, height);
+    ctx.globalCompositeOperation = "source-over";
+
+    // Darken gray layer slightly for drama
+    ctx.fillStyle = "rgba(0,0,0,0.4)";
+    ctx.fillRect(x, y, width, height);
   }
-
-  // Step 3: Calculate grid for pixelated effect
-  const gridCols = Math.floor(width / pixelSize);
-  const gridRows = Math.floor(height / pixelSize);
-  const totalGridPixels = gridCols * gridRows;
-  const coloredPixels = Math.floor(totalGridPixels * completionRate);
-
-  // Step 4: Create result image data (start with grayscale)
-  const resultImageData = ctx.createImageData(width, height);
-  const resultData = resultImageData.data;
-
-  // Start with grayscale data
-  for (let i = 0; i < grayData.length; i++) {
-    resultData[i] = grayData[i];
-  }
-
-  // Step 5: Apply colored pixels progressively in grid pattern (top to bottom, left to right)
-  let pixelsColored = 0;
-  for (let gridY = 0; gridY < gridRows && pixelsColored < coloredPixels; gridY++) {
-    for (let gridX = 0; gridX < gridCols && pixelsColored < coloredPixels; gridX++) {
-      const pixelStartX = gridX * pixelSize;
-      const pixelStartY = gridY * pixelSize;
-
-      // Color all pixels in this grid cell
-      for (let py = 0; py < pixelSize && pixelStartY + py < height; py++) {
-        for (let px = 0; px < pixelSize && pixelStartX + px < width; px++) {
-          const pixelX = pixelStartX + px;
-          const pixelY = pixelStartY + py;
-          const idx = (pixelY * width + pixelX) * 4;
-
-          // Copy colored pixel data
-          resultData[idx] = colorData[idx]; // R
-          resultData[idx + 1] = colorData[idx + 1]; // G
-          resultData[idx + 2] = colorData[idx + 2]; // B
-          // Alpha stays the same
-        }
-      }
-
-      pixelsColored++;
-    }
-  }
-
-  // Step 6: Draw the result (grayscale + colored portion) on main canvas
-  ctx.putImageData(resultImageData, x, y);
 
   ctx.restore();
 }
 
-// Calculate layout based on board type - improved spacing
-function calculateLayout(
-  boardType: string,
-  domains: Domain[],
-  width: number,
-  height: number
-): Array<{ domainId: string; x: number; y: number; width: number; height: number }> {
+function drawPlaceholder(ctx: CanvasRenderingContext2D, item: any, color: string, text: string, grayscale: boolean) {
+  ctx.fillStyle = grayscale ? '#222' : color;
+  ctx.fillRect(item.x, item.y, item.width, item.height);
+
+  // Grid pattern
+  ctx.strokeStyle = "rgba(255,255,255,0.1)";
+  ctx.beginPath();
+  ctx.moveTo(item.x, item.y);
+  ctx.lineTo(item.x + item.width, item.y + item.height);
+  ctx.stroke();
+}
+
+function calculateLayout(type: string, domains: Domain[], w: number, h: number) {
+  // Reuse existing layout logic simplified or just return array
   const domainCount = domains.length;
   const layout: Array<{ domainId: string; x: number; y: number; width: number; height: number }> = [];
 
-  if (boardType === "weekly") {
-    // Weekly: Horizontal strips (vertical stacking) - NO gaps for seamless strips
+  if (type === "weekly" || true) { // Force clean layout for now
     if (domainCount === 4) {
-      const stripHeight = height / 4;
-      domains.forEach((domain, index) => {
-        layout.push({
-          domainId: domain.id,
-          x: 0,
-          y: index * stripHeight,
-          width: width,
-          height: stripHeight,
-        });
-      });
-    } else if (domainCount === 3) {
-      const stripHeight = height / 3;
-      domains.forEach((domain, index) => {
-        layout.push({
-          domainId: domain.id,
-          x: 0,
-          y: index * stripHeight,
-          width: width,
-          height: stripHeight,
-        });
+      // 2x2 Grid is usually more aesthetic than strips for a "Picture" look
+      // User asked for "Vision Board" - usually a collage.
+      const halfW = w / 2;
+      const halfH = h / 2;
+      layout.push({ domainId: domains[0].id, x: 0, y: 0, width: halfW, height: halfH });
+      layout.push({ domainId: domains[1].id, x: halfW, y: 0, width: halfW, height: halfH });
+      layout.push({ domainId: domains[2].id, x: 0, y: halfH, width: halfW, height: halfH });
+      layout.push({ domainId: domains[3].id, x: halfW, y: halfH, width: halfW, height: halfH });
+    } else {
+      // Fallback Vertical Strips
+      const stripHeight = h / domains.length;
+      domains.forEach((d, i) => {
+        layout.push({ domainId: d.id, x: 0, y: i * stripHeight, width: w, height: stripHeight });
       });
     }
-  } else if (boardType === "monthly") {
-    // Monthly: Diagonal mosaic with slight gaps
-    if (domainCount === 4) {
-      const gap = width * 0.02; // 2% gap
-      layout.push({
-        domainId: domains[0].id,
-        x: 0,
-        y: 0,
-        width: width * 0.6,
-        height: height * 0.6,
-      }); // Top-left larger
-      layout.push({
-        domainId: domains[1].id,
-        x: width * 0.4 - gap,
-        y: 0,
-        width: width * 0.6 + gap,
-        height: height * 0.4,
-      }); // Top-right
-      layout.push({
-        domainId: domains[2].id,
-        x: 0,
-        y: height * 0.4 - gap,
-        width: width * 0.4,
-        height: height * 0.6 + gap,
-      }); // Bottom-left
-      layout.push({
-        domainId: domains[3].id,
-        x: width * 0.4 - gap,
-        y: height * 0.4 - gap,
-        width: width * 0.6 + gap,
-        height: height * 0.6 + gap,
-      }); // Bottom-right larger
-    }
-  } else if (boardType === "quarterly" || boardType === "annual" || boardType === "main") {
-    // Main/Annual: Clean 2x2 grid with subtle gaps
-    if (domainCount === 4) {
-      const gap = width * 0.01; // 1% subtle gap
-      const cellWidth = (width - gap) / 2;
-      const cellHeight = (height - gap) / 2;
-      domains.forEach((domain, index) => {
-        const col = index % 2;
-        const row = Math.floor(index / 2);
-        layout.push({
-          domainId: domain.id,
-          x: col * (cellWidth + gap),
-          y: row * (cellHeight + gap),
-          width: cellWidth,
-          height: cellHeight,
-        });
-      });
-    }
-  } else {
-    // Default: simple grid
-    const cols = Math.ceil(Math.sqrt(domainCount));
-    const rows = Math.ceil(domainCount / cols);
-    const cellWidth = width / cols;
-    const cellHeight = height / rows;
-    domains.forEach((domain, index) => {
-      const col = index % cols;
-      const row = Math.floor(index / cols);
-      layout.push({
-        domainId: domain.id,
-        x: col * cellWidth,
-        y: row * cellHeight,
-        width: cellWidth,
-        height: cellHeight,
-      });
-    });
   }
-
   return layout;
 }
 
-// Draw pixelated grid overlay - more subtle
-function drawPixelatedGrid(
-  ctx: CanvasRenderingContext2D,
-  gridCols: number,
-  gridRows: number,
-  pixelSize: number,
-  width: number,
-  height: number
-) {
-  ctx.save();
-  ctx.strokeStyle = "rgba(0, 0, 0, 0.06)"; // More subtle
+function drawPixelatedGrid(ctx: CanvasRenderingContext2D, w: number, h: number, size: number, color: string) {
+  ctx.strokeStyle = color;
   ctx.lineWidth = 0.5;
-
-  // Draw grid lines every 10 pixels for better visibility
-  for (let x = 0; x <= gridCols; x += 10) {
-    ctx.beginPath();
-    ctx.moveTo(x * pixelSize, 0);
-    ctx.lineTo(x * pixelSize, height);
-    ctx.stroke();
-  }
-
-  for (let y = 0; y <= gridRows; y += 10) {
-    ctx.beginPath();
-    ctx.moveTo(0, y * pixelSize);
-    ctx.lineTo(width, y * pixelSize);
-    ctx.stroke();
-  }
-
-  ctx.restore();
+  ctx.beginPath();
+  for (let x = 0; x <= w; x += size * 2) { ctx.moveTo(x, 0); ctx.lineTo(x, h); } // Less dense grid
+  for (let y = 0; y <= h; y += size * 2) { ctx.moveTo(0, y); ctx.lineTo(w, y); }
+  ctx.stroke();
 }

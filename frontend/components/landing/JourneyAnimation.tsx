@@ -43,10 +43,10 @@ export function JourneyAnimation({ className = "" }: JourneyAnimationProps) {
     <div ref={ref} className={className}>
       <div className="space-y-8">
         {/* Board Preview */}
-        <div className="relative aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl overflow-hidden shadow-2xl">
+        <div className="relative aspect-video bg-background-secondary rounded-2xl overflow-hidden shadow-2xl border border-gray-800">
           {/* Grayscale base */}
-          <div className="absolute inset-0 bg-gradient-to-br from-gray-400 to-gray-600 opacity-30" />
-          
+          <div className="absolute inset-0 bg-background-tertiary opacity-50" />
+
           {/* Colored pixels overlay */}
           <motion.div
             className="absolute inset-0 bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 opacity-80"
@@ -56,7 +56,7 @@ export function JourneyAnimation({ className = "" }: JourneyAnimationProps) {
             }}
             transition={{ duration: 1, ease: "easeOut" }}
           />
-          
+
           {/* Grid overlay for pixel effect */}
           <div
             className="absolute inset-0 opacity-20"
@@ -71,21 +71,21 @@ export function JourneyAnimation({ className = "" }: JourneyAnimationProps) {
 
           {/* Stage label overlay */}
           <motion.div
-            className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg"
+            className="absolute top-4 left-4 bg-background-secondary/90 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg border border-gray-800"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             key={currentStage}
           >
-            <p className="font-mono text-sm font-bold text-gray-900">{current.label}</p>
+            <p className="font-mono text-sm font-bold text-foreground">{current.label}</p>
           </motion.div>
 
           {/* Progress overlay */}
-          <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-lg">
+          <div className="absolute bottom-4 left-4 right-4 bg-background-secondary/90 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-gray-800">
             <div className="flex items-center justify-between mb-2">
-              <span className="font-mono text-xs text-gray-600 uppercase">Progress</span>
-              <span className="font-mono text-sm font-bold text-gray-900">{current.progress}%</span>
+              <span className="font-mono text-xs text-foreground-tertiary uppercase">Progress</span>
+              <span className="font-mono text-sm font-bold text-foreground">{current.progress}%</span>
             </div>
-            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div className="w-full h-2 bg-background-tertiary rounded-full overflow-hidden">
               <motion.div
                 className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
                 initial={{ width: "0%" }}
@@ -94,9 +94,9 @@ export function JourneyAnimation({ className = "" }: JourneyAnimationProps) {
               />
             </div>
             <div className="mt-2 flex items-center justify-between">
-              <span className="font-mono text-xs text-gray-500">Pixels Earned</span>
+              <span className="font-mono text-xs text-foreground-tertiary">Pixels Earned</span>
               <motion.span
-                className="font-mono text-sm font-bold text-gray-900"
+                className="font-mono text-sm font-bold text-foreground"
                 key={current.pixels}
                 initial={{ scale: 1.2 }}
                 animate={{ scale: 1 }}
@@ -112,17 +112,15 @@ export function JourneyAnimation({ className = "" }: JourneyAnimationProps) {
           {stages.map((stage, index) => (
             <motion.button
               key={stage.label}
-              className={`relative flex flex-col items-center gap-2 ${
-                index <= currentStage ? "text-blue-600" : "text-gray-400"
-              }`}
+              className={`relative flex flex-col items-center gap-2 ${index <= currentStage ? "text-purple-400" : "text-gray-600"
+                }`}
               onClick={() => setCurrentStage(index)}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
             >
               <motion.div
-                className={`w-3 h-3 rounded-full ${
-                  index <= currentStage ? "bg-blue-600" : "bg-gray-300"
-                }`}
+                className={`w-3 h-3 rounded-full ${index <= currentStage ? "bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]" : "bg-gray-700"
+                  }`}
                 animate={{
                   scale: index === currentStage ? [1, 1.3, 1] : 1,
                 }}
@@ -131,9 +129,8 @@ export function JourneyAnimation({ className = "" }: JourneyAnimationProps) {
               <span className="font-mono text-xs font-medium">{stage.label}</span>
               {index < stages.length - 1 && (
                 <div
-                  className={`absolute top-1.5 left-4 w-16 h-0.5 ${
-                    index < currentStage ? "bg-blue-600" : "bg-gray-300"
-                  }`}
+                  className={`absolute top-1.5 left-4 w-16 h-0.5 ${index < currentStage ? "bg-purple-500/50" : "bg-gray-800"
+                    }`}
                 />
               )}
             </motion.button>

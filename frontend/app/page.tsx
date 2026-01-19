@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useAuthStore } from "@/lib/stores";
-import { Button } from "@/components/shared/Button";
+import { SystemButton } from "@/components/shared/SystemButton";
 import { ParallaxSection } from "@/components/landing/ParallaxSection";
 import { ScrollReveal, StaggerReveal } from "@/components/landing/ScrollReveal";
 import { JourneyAnimation } from "@/components/landing/JourneyAnimation";
@@ -41,13 +41,22 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 overflow-hidden">
+    <div className="min-h-screen bg-background overflow-hidden relative selection:bg-purple/30 selection:text-white">
+      {/* Background Grid Pattern */}
+      <div
+        className="fixed inset-0 pointer-events-none opacity-[0.03]"
+        style={{
+          backgroundImage: `linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)`,
+          backgroundSize: '40px 40px'
+        }}
+      />
+
       {/* Hero Section with Parallax */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* Parallax Background Layers */}
         <ParallaxSection speed={0.3} className="absolute inset-0 pointer-events-none">
-          <div className="absolute inset-x-0 bottom-0 opacity-10">
-            <Mountain className="w-96 h-96 text-gray-400 mx-auto" strokeWidth={1} />
+          <div className="absolute inset-x-0 bottom-0 opacity-5">
+            <Mountain className="w-96 h-96 text-foreground mx-auto" strokeWidth={1} />
           </div>
         </ParallaxSection>
 
@@ -58,14 +67,14 @@ export default function HomePage() {
               animate={{ x: [0, 20, 0] }}
               transition={{ repeat: Infinity, duration: 15, ease: "easeInOut" }}
             >
-              <Cloud className="w-32 h-32 text-blue-100 opacity-40" strokeWidth={1} />
+              <Cloud className="w-32 h-32 text-gray-700 opacity-20" strokeWidth={1} />
             </motion.div>
             <motion.div
               className="absolute top-40 right-20"
               animate={{ x: [0, -15, 0] }}
               transition={{ repeat: Infinity, duration: 18, ease: "easeInOut" }}
             >
-              <Cloud className="w-40 h-40 text-purple-100 opacity-30" strokeWidth={1} />
+              <Cloud className="w-40 h-40 text-gray-600 opacity-10" strokeWidth={1} />
             </motion.div>
           </div>
         </ParallaxSection>
@@ -77,33 +86,44 @@ export default function HomePage() {
               animate={{ scale: [0.8, 1.2, 0.8], opacity: [0.3, 0.6, 0.3] }}
               transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
             >
-              <Sparkles className="w-8 h-8 text-yellow-400" />
+              <Sparkles className="w-8 h-8 text-purple-400 opacity-50" />
             </motion.div>
             <motion.div
               className="absolute bottom-32 right-1/4"
               animate={{ scale: [1, 1.5, 1], opacity: [0.4, 0.7, 0.4] }}
               transition={{ repeat: Infinity, duration: 4, ease: "easeInOut", delay: 0.5 }}
             >
-              <Sparkles className="w-6 h-6 text-yellow-300" />
+              <Sparkles className="w-6 h-6 text-orange-400 opacity-50" />
             </motion.div>
           </div>
         </ParallaxSection>
 
         {/* Hero Content */}
-        <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
+        <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
+            <motion.div
+              className="flex items-center justify-center gap-2 mb-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <span className="px-3 py-1 rounded-full border border-purple/30 bg-purple/10 text-purple-light text-xs font-mono tracking-wider">
+                V 4.0 // SYSTEM OPERATIONAL
+              </span>
+            </motion.div>
+
             <motion.h1
-              className="text-5xl sm:text-7xl font-bold tracking-tight text-gray-900 mb-6"
+              className="text-5xl sm:text-7xl md:text-8xl font-bold tracking-tight text-foreground mb-6 font-mono"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
             >
               <span className="block mb-2">{displayedText}</span>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-orange-500">
                 {fullText.slice(displayedText.length)}
               </span>
               {displayedText.length === fullText.length && (
@@ -111,7 +131,7 @@ export default function HomePage() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: [1, 0, 1] }}
                   transition={{ repeat: Infinity, duration: 1 }}
-                  className="inline-block ml-2"
+                  className="inline-block ml-2 text-purple-500"
                 >
                   |
                 </motion.span>
@@ -119,41 +139,39 @@ export default function HomePage() {
             </motion.h1>
 
             <motion.p
-              className="mt-6 text-xl sm:text-2xl leading-8 text-gray-600 max-w-2xl mx-auto"
+              className="mt-8 text-xl sm:text-2xl leading-relaxed text-foreground-secondary max-w-2xl mx-auto font-sans"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.8 }}
             >
-              Transform your daily effort into evolving visual art. Every journal entry,
-              every completed task—they become pixels that color your vision board.
+              Transform your daily effort into evolving visual art. <br />
+              Every journal entry, every task — pixels that color your vision.
             </motion.p>
 
             <motion.div
-              className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
+              className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.8 }}
             >
               <Link href="/signup">
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <SystemButton
+                  variant="gradient-purple"
+                  size="lg"
+                  className="px-10 py-6 text-lg tracking-wide shadow-[0_0_30px_rgba(139,92,246,0.3)] hover:shadow-[0_0_50px_rgba(139,92,246,0.5)]"
                 >
-                  <Button size="lg" className="px-8 py-4 text-lg font-semibold shadow-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0">
-                    Start Your Journey
-                    <ArrowRight className="ml-2 w-5 h-5" />
-                  </Button>
-                </motion.div>
+                  INITIATE SYSTEM
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </SystemButton>
               </Link>
               <Link href="/login">
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <SystemButton
+                  variant="outline"
+                  size="lg"
+                  className="px-10 py-6 text-lg border-gray-700 hover:bg-white/5"
                 >
-                  <Button variant="outline" size="lg" className="px-8 py-4 text-lg font-semibold border-2 border-gray-300 hover:border-gray-400">
-                    Sign In
-                  </Button>
-                </motion.div>
+                  ACCESS TERMINAL
+                </SystemButton>
               </Link>
             </motion.div>
           </motion.div>
@@ -162,12 +180,12 @@ export default function HomePage() {
         {/* Scroll Indicator */}
         <motion.div
           className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
-          animate={{ y: [0, 10, 0] }}
+          animate={{ y: [0, 10, 0], opacity: [0.5, 1, 0.5] }}
           transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
         >
-          <div className="w-6 h-10 border-2 border-gray-400 rounded-full flex justify-center">
+          <div className="w-6 h-10 border border-gray-700 rounded-full flex justify-center bg-background/50 backdrop-blur">
             <motion.div
-              className="w-1 h-3 bg-gray-400 rounded-full mt-2"
+              className="w-1 h-2 bg-purple-500 rounded-full mt-2"
               animate={{ y: [0, 12, 0] }}
               transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
             />
@@ -176,16 +194,16 @@ export default function HomePage() {
       </section>
 
       {/* Journey Demonstration Section */}
-      <section className="relative py-32 bg-white">
+      <section className="relative py-32 bg-background-secondary border-t border-gray-900">
         <div className="max-w-7xl mx-auto px-6">
           <ScrollReveal direction="up">
             <div className="text-center mb-16">
-              <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-                Watch Your Vision Unfold
+              <h2 className="text-4xl sm:text-5xl font-bold text-foreground mb-4 font-mono">
+                VISUALIZE PROGRESS
               </h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                From weekly pixelations to your complete annual vision board—
-                see how consistency transforms your goals into reality.
+              <p className="text-xl text-foreground-secondary max-w-2xl mx-auto">
+                From weekly pixelations to your complete annual vision board.
+                See consistnecy transform into reality.
               </p>
             </div>
           </ScrollReveal>
@@ -197,15 +215,15 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="relative py-32 bg-gradient-to-b from-white to-gray-50">
+      <section className="relative py-32 bg-background">
         <div className="max-w-7xl mx-auto px-6">
           <ScrollReveal direction="up">
             <div className="text-center mb-16">
-              <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-                Everything You Need to Succeed
+              <h2 className="text-4xl sm:text-5xl font-bold text-foreground mb-4 font-mono">
+                SYSTEM MODULES
               </h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                A complete system designed for self-introspection and disciplined progress.
+              <p className="text-xl text-foreground-secondary max-w-2xl mx-auto">
+                A complete operating system for self-introspection and disciplined progress.
               </p>
             </div>
           </ScrollReveal>
@@ -213,26 +231,26 @@ export default function HomePage() {
           <StaggerReveal className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <FeatureCard
               icon={<Target className="w-7 h-7" />}
-              title="Multi-Domain Vision"
-              description="Create domains for different areas of your life—Career, Health, Learning, Finance. Each domain becomes part of your visual journey."
+              title="Multi-Domain"
+              description="Create domains for different areas of your life—Career, Health, Learning. Each domain becomes part of your visual journey."
               delay={0}
             />
             <FeatureCard
               icon={<SparklesIcon className="w-7 h-7" />}
-              title="Progressive Coloring"
-              description="Every journal entry and completed task earns pixels that colorize your vision board. Watch your grayscale canvas come alive day by day."
+              title="Pixel & Bit"
+              description="Every journal entry earns pixels. Watch your grayscale canvas come alive day by day as you complete tasks."
               delay={0.1}
             />
             <FeatureCard
               icon={<Brain className="w-7 h-7" />}
-              title="AI Coaching"
-              description="Get personalized goal breakdown, daily reflections, and adaptive task planning powered by AI. Your journey, intelligently guided."
+              title="AI Architect"
+              description="Get personalized goal breakdown, daily reflections, and adaptive task planning powered by AI."
               delay={0.2}
             />
             <FeatureCard
               icon={<BookOpen className="w-7 h-7" />}
-              title="Narrative-Driven"
-              description="Weekly wraps tell your story. See how your effort, challenges, and growth weave together into a meaningful narrative of progress."
+              title="Narrative Log"
+              description="Weekly wraps tell your story. See how your effort, challenges, and growth weave together."
               delay={0.3}
             />
           </StaggerReveal>
@@ -240,8 +258,12 @@ export default function HomePage() {
       </section>
 
       {/* Statistics Section */}
-      <section className="relative py-24 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-        <div className="max-w-7xl mx-auto px-6">
+      <section className="relative py-24 border-y border-gray-900 overflow-hidden">
+        <div className="absolute inset-0 bg-background-secondary opacity-50" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-50" />
+        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-orange-500 to-transparent opacity-50" />
+
+        <div className="relative max-w-7xl mx-auto px-6">
           <ScrollReveal direction="up">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
               <motion.div
@@ -249,33 +271,36 @@ export default function HomePage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0 }}
+                className="p-6 rounded-2xl bg-background/50 border border-gray-800"
               >
-                <div className="text-5xl font-bold mb-2">
+                <div className="text-5xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-500 font-mono">
                   <CountUp to={10000} suffix="+" />
                 </div>
-                <div className="text-blue-100 text-lg">Pixels Earned Daily</div>
+                <div className="text-purple-400 text-lg font-mono">PIXELS GENERATED</div>
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.2 }}
+                className="p-6 rounded-2xl bg-background/50 border border-gray-800"
               >
-                <div className="text-5xl font-bold mb-2">
+                <div className="text-5xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-500 font-mono">
                   <CountUp to={85} suffix="%" />
                 </div>
-                <div className="text-blue-100 text-lg">Average Completion Rate</div>
+                <div className="text-orange-400 text-lg font-mono">COMPLETION RATE</div>
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.4 }}
+                className="p-6 rounded-2xl bg-background/50 border border-gray-800"
               >
-                <div className="text-5xl font-bold mb-2">
-                  <CountUp to={30} suffix=" days" />
+                <div className="text-5xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-500 font-mono">
+                  <CountUp to={30} suffix=" d" />
                 </div>
-                <div className="text-blue-100 text-lg">Average Streak</div>
+                <div className="text-green-400 text-lg font-mono">AVG STREAK</div>
               </motion.div>
             </div>
           </ScrollReveal>
@@ -283,7 +308,7 @@ export default function HomePage() {
       </section>
 
       {/* Final CTA Section */}
-      <section className="relative py-32 bg-white">
+      <section className="relative py-32 bg-background">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <ScrollReveal direction="up">
             <motion.div
@@ -292,10 +317,10 @@ export default function HomePage() {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
-                Ready to transform your life?
+              <h2 className="text-4xl sm:text-5xl font-bold text-foreground mb-6 font-mono">
+                READY TO ARCHITECT YOUR LIFE?
               </h2>
-              <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
+              <p className="text-xl text-foreground-secondary mb-10 max-w-2xl mx-auto">
                 Join thousands who are turning their goals into beautiful, tangible progress.
                 Start your visual journey today.
               </p>
@@ -305,26 +330,16 @@ export default function HomePage() {
                   whileTap={{ scale: 0.95 }}
                   className="inline-block"
                 >
-                  <Button
+                  <SystemButton
                     size="lg"
-                    className="px-10 py-5 text-xl font-semibold shadow-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 text-white border-0 relative overflow-hidden group"
+                    variant="gradient-orange"
+                    className="px-10 py-5 text-xl font-semibold shadow-[0_0_30px_rgba(249,115,22,0.3)] hover:shadow-[0_0_50px_rgba(249,115,22,0.5)]"
                   >
                     <span className="relative z-10 flex items-center">
-                      Create Your Vision Board
-                      <ArrowRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                      INITIALIZE BOARD
+                      <ArrowRight className="ml-2 w-6 h-6" />
                     </span>
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0"
-                      animate={{
-                        x: ["-100%", "200%"],
-                      }}
-                      transition={{
-                        repeat: Infinity,
-                        duration: 3,
-                        ease: "linear",
-                      }}
-                    />
-                  </Button>
+                  </SystemButton>
                 </motion.div>
               </Link>
             </motion.div>

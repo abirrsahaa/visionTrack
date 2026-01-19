@@ -1,231 +1,257 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { queryKeys } from "@/lib/query/queryClient";
-import { PixelEarnedAnimation } from "@/components/journal/PixelEarnedAnimation";
 import { MilestoneCelebration } from "@/components/dashboard/MilestoneCelebration";
 import { calculateStreak } from "@/lib/utils/streakCalculator";
-import { generateActivityFeed } from "@/lib/utils/generateJournalHistory";
-import { TodayTasks } from "@/components/dashboard/TodayTasks";
-import { VisionBoardPreview } from "@/components/dashboard/VisionBoardPreview";
-import { WeeklyBoardDisplay } from "@/components/dashboard/WeeklyBoardDisplay";
-import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
-import { StreakBadge } from "@/components/dashboard/StreakBadge";
-import { LevelCard } from "@/components/dashboard/LevelCard";
-import { CommunityWidget } from "@/components/dashboard/CommunityWidget";
-import { QuickActions } from "@/components/dashboard/QuickActions";
-import { UpcomingMilestones } from "@/components/dashboard/UpcomingMilestones";
-import { TodayFocusBanner } from "@/components/dashboard/TodayFocusBanner";
+import { VisionBoardWidget } from "@/components/dashboard/VisionBoardWidget";
 import { HeroProgressCard } from "@/components/dashboard/HeroProgressCard";
-import { WeeklyProgressChart } from "@/components/dashboard/WeeklyProgressChart";
 import { LifeDomainsPanel } from "@/components/dashboard/LifeDomainsPanel";
-import { DomainCategoryGrid } from "@/components/dashboard/DomainCategoryGrid";
 import { SystemPanel } from "@/components/shared/SystemPanel";
 import { NightJournalPanel } from "@/components/dashboard/NightJournalPanel";
-import type { Todo, CreateJournalRequest, PixelsEarned } from "@/lib/types";
+import { QuickActions } from "@/components/dashboard/QuickActions";
+import { Compass, Sparkles, Terminal, Activity, LayoutDashboard } from "lucide-react";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const queryClient = useQueryClient();
-  const [boardType, setBoardType] = useState<"weekly" | "monthly" | "quarterly">("weekly");
-  const [showPixelAnimation, setShowPixelAnimation] = useState(false);
-  const [pixelsEarned, setPixelsEarned] = useState<PixelsEarned | null>(null);
+  const [boardType, setBoardType] = useState<"weekly" | "monthly" | "annual">("weekly");
   const [celebratedMilestones, setCelebratedMilestones] = useState<Set<number>>(new Set());
   const [currentMilestone, setCurrentMilestone] = useState<number | null>(null);
 
-  // Fetch current board - supports weekly, monthly, and quarterly
+  // --- Data Fetching --- 
   const { data: currentBoard, isLoading: boardLoading } = useQuery({
     queryKey: [...queryKeys.boards.current, boardType],
     queryFn: async () => {
-      if (boardType === "monthly") {
-        return api.boards.getMonthly(0);
-      } else if (boardType === "quarterly") {
-        // For quarterly, we can use the annual board or aggregate monthly boards
-        // Using annual board as quarterly view for now
-        return api.boards.getAnnual();
-      }
-      // Default: weekly
+      // API call routing based on view type
+      if (boardType === "monthly") return api.boards.getMonthly(0);
+      if (boardType === "annual") return api.boards.getAnnual();
       return api.boards.getCurrent();
     },
   });
 
-  // Fetch pixel summary
   const { data: pixelSummary } = useQuery({
-    queryKey: queryKeys.pixels.summary(
-      currentBoard?.periodStart,
-      currentBoard?.periodEnd
-    ),
-    queryFn: () =>
-      api.pixels.getSummary({
-        start: currentBoard?.periodStart,
-        end: currentBoard?.periodEnd,
-      }),
+    queryKey: queryKeys.pixels.summary(currentBoard?.periodStart, currentBoard?.periodEnd),
+    queryFn: () => api.pixels.getSummary(currentBoard?.periodStart, currentBoard?.periodEnd),
     enabled: !!currentBoard,
   });
 
-  // Fetch domains
   const { data: domains, isLoading: domainsLoading } = useQuery({
     queryKey: queryKeys.domains.all,
     queryFn: api.domains.getAll,
   });
 
-  // Fetch journals for streak calculation
   const { data: journals } = useQuery({
     queryKey: queryKeys.journals.all,
     queryFn: () => api.journals.getAll(),
   });
 
-  // Calculate streak
-  const streakData = journals ? calculateStreak(journals) : {
-    currentStreak: 0,
-    longestStreak: 0,
-    totalJournals: 0,
-    streakStartDate: null,
-    isActive: false,
-  };
-
-  // Generate activity feed
-  const activities = journals ? generateActivityFeed(journals, pixelSummary) : [];
-
-  // Calculate completion percentage
+  // Calculations
+  const streakData = journals ? calculateStreak(journals) : { currentStreak: 0, isActive: false };
   const completionPercentage = currentBoard?.totalPixels
     ? Math.round((currentBoard.coloredPixels / currentBoard.totalPixels) * 100)
     : 0;
 
-  // Calculate level and XP (mock data)
-  const level = 12;
-  const totalXP = 8420;
-  const xpToNextLevel = 420;
-  const currentXPInLevel = totalXP - (level - 1) * 700;
-  const xpRequiredForNext = 700;
-
-  // Check if journal is pending today
   const hasPendingJournal = !journals?.some(
     (j) => j.journalDate === format(new Date(), "yyyy-MM-dd")
   );
 
-  // Calculate milestones for upcoming
-  const streakDaysUntil30 = Math.max(0, 30 - streakData.currentStreak);
-  const percentUntil50Vision = Math.max(0, 50 - completionPercentage);
-
-  // Check for milestone achievements
+  // Milestones Check
   useEffect(() => {
     if (!currentBoard) return;
-
     const milestones = [50, 75, 100];
-    const percentage = completionPercentage;
-
     milestones.forEach((milestone) => {
-      if (percentage >= milestone && !celebratedMilestones.has(milestone)) {
+      if (completionPercentage >= milestone && !celebratedMilestones.has(milestone)) {
         setCelebratedMilestones((prev) => new Set(prev).add(milestone));
         setCurrentMilestone(milestone);
       }
     });
   }, [completionPercentage, currentBoard, celebratedMilestones]);
 
-  // Calculate domain progress map
   const domainProgress = new Map<string, number>();
   if (pixelSummary && domains) {
-    pixelSummary.byDomain.forEach((domainData) => {
-      domainProgress.set(domainData.domainId, domainData.percentage * 100);
-    });
+    pixelSummary.byDomain.forEach((d) => domainProgress.set(d.domainId, d.percentage * 100));
   }
 
-  // Journal submission handler
-  const handleJournalSubmit = (text: string) => {
-    // This would trigger journal submission - placeholder for now
-    console.log("Journal submitted:", text);
-  };
-
   return (
-    <div className="min-h-screen bg-background">
-      {/* Main Dashboard Layout */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Title */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h1 className="text-3xl font-bold text-foreground">Your Journey</h1>
-          <p className="text-foreground-tertiary mt-1">Witness your effort turning into art</p>
-        </motion.div>
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-purple/30">
 
-        {/* Top Row: Vision Board (2 columns) + Split Card (1 column) */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 lg:items-stretch">
-          {/* Vision Board - Spans 2 columns, main element - matches height of right column */}
-          <div className="lg:col-span-2 flex">
-            <SystemPanel className="p-0 overflow-hidden w-full flex flex-col">
-              <WeeklyBoardDisplay
-                board={currentBoard || null}
-                domains={domains || []}
-                boardType={boardType}
-                onBoardTypeChange={setBoardType}
-                isLoading={boardLoading || domainsLoading}
-              />
-            </SystemPanel>
+      {/* HUD Header */}
+      <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-white/5 py-3 px-6 lg:px-12 mb-6 transition-all duration-300">
+        <div className="flex items-center justify-between max-w-[1920px] mx-auto">
+          <div className="flex items-center gap-3">
+            <div className="p-1.5 bg-purple/10 rounded-lg border border-purple/20">
+              <Compass className="w-5 h-5 text-purple" />
+            </div>
+            <div>
+              <h1 className="text-sm font-bold tracking-widest uppercase">Command Center</h1>
+              <p className="text-[10px] text-foreground-tertiary font-mono">SYSTEM READY // {format(new Date(), "yyyy.MM.dd")}</p>
+            </div>
           </div>
 
-          {/* Split Card: Weekly Progress (top) + Hero Progress (bottom) */}
-          <div className="flex flex-col gap-6">
-            {/* Weekly Progress Chart - Upper Half */}
-            <div className="flex-1 min-h-0">
-              <WeeklyProgressChart journals={journals || []} className="h-full" />
+          {/* Global Stats Ticker */}
+          <div className="hidden lg:flex items-center gap-8 bg-black/20 px-6 py-2 rounded-full border border-white/5">
+            <div className="flex items-center gap-3">
+              <Activity className="w-3 h-3 text-green-400" />
+              <span className="text-xs font-mono text-foreground-secondary">STREAK: <span className="text-white">{streakData.currentStreak} DAYS</span></span>
+            </div>
+            <div className="h-3 w-[1px] bg-white/10" />
+            <div className="flex items-center gap-3">
+              <Sparkles className="w-3 h-3 text-orange-400" />
+              <span className="text-xs font-mono text-foreground-secondary">LEVEL 12 ARCH: <span className="text-white">8420 XP</span></span>
+            </div>
+            <div className="h-3 w-[1px] bg-white/10" />
+            <div className="flex items-center gap-3">
+              <LayoutDashboard className="w-3 h-3 text-purple-400" />
+              <span className="text-xs font-mono text-foreground-secondary">VISION SYNC: <span className="text-white">{completionPercentage}%</span></span>
+            </div>
+          </div>
+
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple to-orange opacity-20" />
+        </div>
+      </div>
+
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+
+        {/* THE ARCHITECT'S DESK LAYOUT */}
+        {/* 3 Columns: INPUT (Tools) -> OUTPUT (Vision) -> CONTROL (Stats) */}
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 h-[calc(100vh-140px)] min-h-[800px]">
+
+          {/* LEFT COLUMN: INPUT TOOLS (3 Cols) */}
+          <div className="xl:col-span-3 flex flex-col gap-6 h-full overflow-hidden">
+
+            {/* Daily Protocol (Tasks) */}
+            <SystemPanel className="bg-[#0a0a0a] border-white/5 flex-shrink-0">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xs font-bold text-foreground-secondary uppercase tracking-wider">Daily Protocol</h3>
+                <span className="px-2 py-0.5 bg-white/5 rounded text-[10px] font-mono text-foreground-tertiary">3 PENDING</span>
+              </div>
+              <div className="space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="group flex items-start gap-3 p-3 rounded-lg border border-transparent hover:border-white/10 hover:bg-white/5 transition-all cursor-pointer">
+                    <div className="mt-1 w-4 h-4 rounded border border-white/20 group-hover:border-purple/50 flex items-center justify-center transition-colors">
+                      <div className="w-2 h-2 rounded-sm bg-purple opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-foreground-secondary group-hover:text-foreground transition-colors">Complete module {i} design</p>
+                      <p className="text-[10px] text-foreground-tertiary mt-0.5">CAREER // 150 XP</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </SystemPanel>
+
+            {/* Night Journal (Input) - FLEX GROW with MINIMUM HEIGHT */}
+            <SystemPanel className="bg-[#0a0a0a] border-white/5 flex-grow min-h-[300px] flex flex-col">
+              <NightJournalPanel
+                onSubmit={(text) => console.log(text)}
+                isLoading={false}
+              />
+            </SystemPanel>
+
+            {/* System Log / Terminal - MOVED HERE */}
+            <div className="flex-shrink-0 min-h-[160px] bg-black/80 border border-white/10 rounded-xl p-4 font-mono text-xs text-foreground-secondary overflow-hidden relative">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-purple/20 to-transparent" />
+              <div className="flex items-center gap-2 mb-3 text-purple-400">
+                <Terminal className="w-3 h-3" />
+                <span className="tracking-widest uppercase text-[10px]">Event Stream</span>
+              </div>
+              <div className="space-y-2 relative z-10">
+                <p className="opacity-50 text-[10px]">10:42:05</p>
+                <p className="text-gray-400">&gt; User session active.</p>
+                <p className="text-gray-400">&gt; Pixel engine online.</p>
+                <div className="pl-2 border-l border-white/10 my-2">
+                  <p className="text-green-400">Journal Entry received.</p>
+                  <p className="text-purple-400">+45 Pixels generated.</p>
+                </div>
+                <p className="text-gray-400">&gt; <span className="animate-pulse">Awaiting new directives...</span></p>
+              </div>
+            </div>
+          </div>
+
+          {/* CENTER COLUMN: THE MASTERPIECE (6 Cols) */}
+          <div className="xl:col-span-6 h-full flex flex-col gap-4">
+            <div className="flex-1 rounded-2xl border border-white/10 bg-[#050505] shadow-2xl overflow-hidden relative group">
+              {/* Decorative Blueprint Lines */}
+              <div className="absolute top-4 left-4 w-4 h-4 border-t border-l border-white/20" />
+              <div className="absolute top-4 right-4 w-4 h-4 border-t border-r border-white/20" />
+              <div className="absolute bottom-4 left-4 w-4 h-4 border-b border-l border-white/20" />
+              <div className="absolute bottom-4 right-4 w-4 h-4 border-b border-r border-white/20" />
+
+              <VisionBoardWidget
+                board={currentBoard || null}
+                domains={domains || []}
+                currentView={boardType as "weekly" | "monthly" | "annual"}
+                onViewChange={(view) => setBoardType(view)}
+                isLoading={boardLoading || domainsLoading}
+              />
             </div>
 
-            {/* Hero Progress Card - Lower Half */}
-            <div className="flex-1 min-h-0">
+            {/* Under-board: Process Visualization */}
+            <div className="h-16 bg-black/40 border border-white/5 rounded-xl flex items-center justify-between px-6">
+              <div className="flex items-center gap-4 opacity-50">
+                <span className="text-xs font-mono text-gray-500">INPUT SOURCE</span>
+                <div className="h-1 w-8 bg-gray-800 rounded-full" />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <motion.div
+                      key={i}
+                      animate={{ opacity: [0.2, 1, 0.2] }}
+                      transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
+                      className="w-1.5 h-3 bg-purple rounded-sm"
+                    />
+                  ))}
+                </div>
+                <span className="text-[10px] font-mono text-purple-400 uppercase tracking-widest ml-2">Processing Reality</span>
+              </div>
+
+              <div className="flex items-center gap-4 opacity-50">
+                <div className="h-1 w-8 bg-gray-800 rounded-full" />
+                <span className="text-xs font-mono text-gray-500">VISUAL OUTPUT</span>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT COLUMN: CONTROL & FEEDBACK (3 Cols) */}
+          <div className="xl:col-span-3 flex flex-col gap-6 h-full overflow-y-auto custom-scrollbar no-scrollbar">
+
+            {/* Hero Card Small */}
+            <div className="h-48 flex-shrink-0">
               <HeroProgressCard
-                level={level}
+                level={12}
                 totalJournals={journals?.length || 0}
                 totalHours={Math.round((journals?.length || 0) * 2.5)}
                 isPro={true}
-                className="h-full"
+                className="h-full border border-white/10"
               />
             </div>
+
+            {/* Domain Status Grid */}
+            <SystemPanel className="bg-[#0a0a0a] border-white/5 flex-grow">
+              <LifeDomainsPanel
+                domains={domains || []}
+                domainProgress={domainProgress}
+                onDomainClick={(domain) => router.push(`/domains`)}
+              />
+            </SystemPanel>
+
+            {/* Quick Actions (Moved HERE to Right Column) */}
+            <div className="flex-shrink-0">
+              <QuickActions hasPendingJournal={hasPendingJournal} />
+            </div>
+
           </div>
         </div>
-
-        {/* Middle Row: 3 Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          {/* Domains Progress */}
-          <SystemPanel>
-            <LifeDomainsPanel
-              domains={domains || []}
-              domainProgress={domainProgress}
-              onDomainClick={(domain) => router.push(`/domains`)}
-            />
-          </SystemPanel>
-
-          {/* Journal Entry */}
-          <SystemPanel>
-            <NightJournalPanel
-              onSubmit={handleJournalSubmit}
-              isLoading={false}
-            />
-          </SystemPanel>
-
-          {/* Quick Actions */}
-          <QuickActions hasPendingJournal={hasPendingJournal} />
-        </div>
-
-        {/* Domain Category Grid (Bottom) */}
-        {domains && domains.length > 0 && (
-          <SystemPanel>
-            <DomainCategoryGrid
-              domains={domains}
-              onDomainClick={(domain) => router.push(`/domains`)}
-            />
-          </SystemPanel>
-        )}
       </div>
 
-      {/* Milestone Celebration Modal */}
+      {/* Celebration Modal */}
       {currentMilestone !== null && currentBoard && (
         <MilestoneCelebration
           milestone={currentMilestone}

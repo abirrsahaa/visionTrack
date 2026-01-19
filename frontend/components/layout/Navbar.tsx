@@ -3,16 +3,19 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Layers, Calendar, Archive, Zap, Moon, Sun, Home } from "lucide-react";
+import { LayoutGrid, Map, Database, Settings, LogOut } from "lucide-react";
 import { useAuthStore } from "@/lib/stores";
 import { useTheme } from "@/lib/contexts/ThemeContext";
 import { cn } from "@/lib/utils/cn";
+import { Logo } from "@/components/shared/Logo";
+import { useScrollDirection } from "@/lib/hooks/useScrollDirection";
 
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { logout, user } = useAuthStore();
   const { theme, toggleTheme } = useTheme();
+  const scrollDirection = useScrollDirection();
 
   const handleLogout = () => {
     logout();
@@ -20,100 +23,96 @@ export function Navbar() {
   };
 
   const navItems = [
-    { href: "/dashboard", label: "Dashboard", icon: Home },
-    { href: "/timeline", label: "Timeline", icon: Calendar },
-    { href: "/boards/checkpoints", label: "Archives", icon: Archive },
-    { href: "/settings", label: "Settings", icon: Zap },
+    { href: "/dashboard", label: "Dashboard", icon: LayoutGrid },
+    { href: "/timeline", label: "Timeline", icon: Map },
+    { href: "/archives", label: "Archives", icon: Database },
+    { href: "/settings", label: "System", icon: Settings },
   ];
 
   const isActive = (href: string) => {
-    if (href === "/dashboard") {
-      return pathname === "/dashboard";
-    }
+    if (href === "/dashboard") return pathname === "/dashboard";
     return pathname.startsWith(href);
   };
 
   return (
-    <nav className="bg-background border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href="/dashboard">
-            <motion.div
-              className="flex items-center gap-2 cursor-pointer group"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <div className="w-8 h-8 gradient-purple rounded-lg flex items-center justify-center shadow-lg">
-                <Layers className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xl font-bold text-foreground">Visual Life</span>
-            </motion.div>
-          </Link>
+    <>
+      {/* Floating HUD Container */}
+      <motion.nav
+        initial={{ y: -100 }}
+        animate={{ y: scrollDirection === "down" ? -150 : 0 }}
+        transition={{ type: "spring", stiffness: 100, damping: 20 }}
+        className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"
+      >
+        <div className="max-w-5xl w-full flex items-center gap-4 pointer-events-auto">
 
-          {/* Navigation Items */}
-          <div className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.href);
-              
-              return (
-                <Link key={item.href} href={item.href}>
-                  <motion.div
-                    className={cn(
-                      "relative px-4 py-2 rounded-lg font-medium transition-colors group",
-                      active
-                        ? "text-purple bg-purple/20 glow-purple"
-                        : "text-foreground-secondary hover:text-foreground hover:bg-background-secondary"
-                    )}
-                    whileHover={{ y: -1 }}
-                    whileTap={{ y: 0 }}
-                  >
-                    {active && (
-                      <motion.div
-                        layoutId="activeNavIndicator"
-                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple rounded-full"
-                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                      />
-                    )}
-                    <div className="flex items-center gap-2">
-                      <Icon className="w-4 h-4" />
-                      <span>{item.label}</span>
-                    </div>
-                  </motion.div>
-                </Link>
-              );
-            })}
+          {/* Branding Module */}
+          <div className="hidden md:flex backdrop-blur-xl bg-[#050505]/80 border border-white/10 rounded-2xl px-5 py-3 shadow-2xl shadow-black/50">
+            <Link href="/dashboard">
+              <Logo />
+            </Link>
           </div>
 
-          {/* Right Actions */}
-          <div className="flex items-center gap-4">
-            {/* Theme Toggle */}
-            <motion.button
-              onClick={toggleTheme}
-              className="p-2 text-foreground-tertiary hover:text-foreground rounded-lg hover:bg-background-secondary transition-colors"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              {theme === "dark" ? (
-                <Sun className="w-5 h-5" />
-              ) : (
-                <Moon className="w-5 h-5" />
-              )}
-            </motion.button>
+          {/* Navigation Dock */}
+          <div className="flex-1 flex items-center justify-center">
+            <div className="flex items-center gap-1 backdrop-blur-xl bg-[#050505]/80 border border-white/10 rounded-2xl px-2 py-2 shadow-2xl shadow-black/50">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.href);
 
-            {/* User Profile */}
+                return (
+                  <Link key={item.href} href={item.href}>
+                    <motion.div
+                      className={cn(
+                        "relative px-4 py-2.5 rounded-xl font-medium transition-all group flex items-center gap-2 text-sm font-mono tracking-wide",
+                        active
+                          ? "text-white bg-white/10 shadow-[inner_0_0_10px_rgba(255,255,255,0.05)] border border-white/5"
+                          : "text-gray-500 hover:text-white hover:bg-white/5"
+                      )}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Icon className={cn("w-4 h-4", active ? "text-purple-400" : "group-hover:text-purple-300")} />
+                      <span className="hidden sm:inline-block">{item.label}</span>
+
+                      {/* Active Indicator Light */}
+                      {active && (
+                        <motion.span
+                          layoutId="navIndicator"
+                          className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-purple-500 shadow-[0_0_8px_#a855f7]"
+                        />
+                      )}
+                    </motion.div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* User Control Module */}
+          <div className="hidden md:flex items-center gap-2 backdrop-blur-xl bg-[#050505]/80 border border-white/10 rounded-2xl p-2 shadow-2xl shadow-black/50">
+            {/* Status Indicator */}
+            <div className="px-3 py-2 flex flex-col items-end border-r border-white/5 pr-3">
+              <span className="text-[10px] text-gray-400 font-mono uppercase leading-none">Status</span>
+              <span className="text-[10px] text-green-400 font-bold font-mono tracking-wider leading-none mt-1">ONLINE</span>
+            </div>
+
+            {/* Profile / Logout */}
             <motion.button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-3 py-2 text-foreground-secondary hover:text-foreground rounded-lg hover:bg-background-secondary transition-colors text-sm"
+              className="p-2.5 text-gray-400 hover:text-red-400 rounded-xl hover:bg-white/5 transition-colors"
+              title="Disconnect"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <span>{user?.name || "User"}</span>
+              <LogOut className="w-4 h-4" />
             </motion.button>
           </div>
+
         </div>
-      </div>
-    </nav>
+      </motion.nav>
+
+      {/* Spacer to prevent content from going under fixed nav */}
+      <div className="h-28" />
+    </>
   );
 }

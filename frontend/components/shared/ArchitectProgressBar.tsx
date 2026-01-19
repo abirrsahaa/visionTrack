@@ -39,9 +39,9 @@ export function ArchitectProgressBar({
           </span>
         </div>
       )}
-      <div className={`arch-progress-bar ${heightClasses[height]}`}>
+      <div className={`w-full bg-background-tertiary rounded-full overflow-hidden ${heightClasses[height]}`}>
         <motion.div
-          className="arch-progress-fill"
+          className="h-full rounded-full"
           style={{ backgroundColor: color }}
           initial={{ width: 0 }}
           animate={{ width: `${displayPercentage}%` }}

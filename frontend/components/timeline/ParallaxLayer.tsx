@@ -29,21 +29,21 @@ export function ParallaxLayer({ children, speed = 0.5, className = "" }: Paralla
 export function MountainLayer() {
   return (
     <ParallaxLayer speed={0.3} className="absolute inset-x-0 bottom-0 pointer-events-none">
-      <div className="relative h-96 opacity-10">
+      <div className="relative h-96 opacity-30">
         {/* Left Mountains */}
         <div className="absolute left-0 bottom-0">
-          <Mountain className="w-64 h-64 text-gray-400" strokeWidth={1} />
+          <Mountain className="w-64 h-64 text-purple-900" strokeWidth={1} />
         </div>
         <div className="absolute left-32 bottom-0">
-          <Mountain className="w-48 h-48 text-gray-300" strokeWidth={1} />
+          <Mountain className="w-48 h-48 text-purple-800" strokeWidth={1} />
         </div>
 
         {/* Right Mountains */}
         <div className="absolute right-0 bottom-0">
-          <Mountain className="w-56 h-56 text-gray-400" strokeWidth={1} />
+          <Mountain className="w-56 h-56 text-purple-900" strokeWidth={1} />
         </div>
         <div className="absolute right-40 bottom-0">
-          <Mountain className="w-40 h-40 text-gray-300" strokeWidth={1} />
+          <Mountain className="w-40 h-40 text-purple-800" strokeWidth={1} />
         </div>
       </div>
     </ParallaxLayer>
@@ -53,14 +53,14 @@ export function MountainLayer() {
 export function CloudLayer() {
   return (
     <ParallaxLayer speed={0.6} className="absolute inset-0 pointer-events-none">
-      <div className="relative h-full">
+      <div className="relative h-full text-purple-500/20">
         {/* Clouds scattered across the view */}
         <motion.div
           className="absolute top-20 left-10"
           animate={{ x: [0, 20, 0] }}
           transition={{ repeat: Infinity, duration: 15, ease: "easeInOut" }}
         >
-          <Cloud className="w-24 h-24 text-blue-100 opacity-60" strokeWidth={1} />
+          <Cloud className="w-24 h-24 text-current opacity-60" strokeWidth={1} />
         </motion.div>
 
         <motion.div
@@ -68,7 +68,7 @@ export function CloudLayer() {
           animate={{ x: [0, -15, 0] }}
           transition={{ repeat: Infinity, duration: 18, ease: "easeInOut" }}
         >
-          <Cloud className="w-32 h-32 text-blue-50 opacity-50" strokeWidth={1} />
+          <Cloud className="w-32 h-32 text-current opacity-50" strokeWidth={1} />
         </motion.div>
 
         <motion.div
@@ -76,7 +76,7 @@ export function CloudLayer() {
           animate={{ x: [0, 25, 0] }}
           transition={{ repeat: Infinity, duration: 20, ease: "easeInOut" }}
         >
-          <Cloud className="w-28 h-28 text-blue-100 opacity-40" strokeWidth={1} />
+          <Cloud className="w-28 h-28 text-current opacity-40" strokeWidth={1} />
         </motion.div>
 
         <motion.div
@@ -84,7 +84,7 @@ export function CloudLayer() {
           animate={{ x: [0, -20, 0] }}
           transition={{ repeat: Infinity, duration: 16, ease: "easeInOut" }}
         >
-          <Cloud className="w-20 h-20 text-blue-50 opacity-60" strokeWidth={1} />
+          <Cloud className="w-20 h-20 text-current opacity-60" strokeWidth={1} />
         </motion.div>
       </div>
     </ParallaxLayer>
@@ -104,7 +104,7 @@ export function SparkleLayer() {
           }}
           transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
         >
-          <Sparkles className="w-6 h-6 text-yellow-400" />
+          <Sparkles className="w-6 h-6 text-purple-400" />
         </motion.div>
 
         <motion.div
@@ -115,7 +115,7 @@ export function SparkleLayer() {
           }}
           transition={{ repeat: Infinity, duration: 4, ease: "easeInOut", delay: 0.5 }}
         >
-          <Sparkles className="w-5 h-5 text-yellow-300" />
+          <Sparkles className="w-5 h-5 text-orange-400" />
         </motion.div>
 
         <motion.div
@@ -126,7 +126,7 @@ export function SparkleLayer() {
           }}
           transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut", delay: 1 }}
         >
-          <Sparkles className="w-4 h-4 text-yellow-500" />
+          <Sparkles className="w-4 h-4 text-purple-300" />
         </motion.div>
 
         <motion.div
@@ -137,7 +137,7 @@ export function SparkleLayer() {
           }}
           transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut", delay: 1.5 }}
         >
-          <Sparkles className="w-5 h-5 text-yellow-400" />
+          <Sparkles className="w-5 h-5 text-orange-300" />
         </motion.div>
       </div>
     </ParallaxLayer>

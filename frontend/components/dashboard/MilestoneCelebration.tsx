@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Confetti from "react-confetti";
-import { Trophy, Target, Sparkles, Award } from "lucide-react";
+import { Trophy, Target, Sparkles, Award, Zap, Hexagon } from "lucide-react";
 import { useWindowSize } from "@/lib/hooks/useWindowSize";
-import { Modal } from "@/components/shared/Modal";
-import { Button } from "@/components/shared/Button";
+import { SystemButton } from "@/components/shared/SystemButton";
 import { CountUp } from "@/components/shared/CountUp";
 
 interface MilestoneCelebrationProps {
@@ -26,10 +25,9 @@ export function MilestoneCelebration({
   const { width, height } = useWindowSize();
 
   useEffect(() => {
-    // Hide confetti after 3 seconds
     const timer = setTimeout(() => {
       setShowConfetti(false);
-    }, 3000);
+    }, 4000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -37,32 +35,48 @@ export function MilestoneCelebration({
     switch (milestone) {
       case 50:
         return {
-          title: "Halfway There! 🎯",
-          message: "You've reached 50% of your vision board! Keep pushing forward!",
+          title: "HALFWAY MARK",
+          subtitle: "SYSTEM SYNC: 50%",
+          message: "Reality construction is at 50% capacity. Keep pushing.",
           icon: Target,
+          color: "text-blue-400",
+          glow: "shadow-blue-500/50",
+          border: "border-blue-500/30",
         };
       case 75:
         return {
-          title: "Almost Complete! 🌟",
-          message: "75% done! You're in the final stretch!",
-          icon: Trophy,
+          title: "FINAL STRETCH",
+          subtitle: "SYSTEM SYNC: 75%",
+          message: "Vision manifestation imminent. High coherence detected.",
+          icon: Zap,
+          color: "text-purple-400",
+          glow: "shadow-purple-500/50",
+          border: "border-purple-500/30",
         };
       case 100:
         return {
-          title: "Vision Complete! 🎉",
-          message: "100% complete! You've achieved your vision!",
+          title: "VISION REALIZED",
+          subtitle: "SYSTEM SYNC: 100%",
+          message: "Full synchronization achieved. The future is now present.",
           icon: Award,
+          color: "text-orange-400",
+          glow: "shadow-orange-500/50",
+          border: "border-orange-500/30",
         };
       default:
         return {
-          title: "Milestone Reached! 🎊",
-          message: `You've reached ${milestone}% of your vision board!`,
+          title: "MILESTONE REACHED",
+          subtitle: `SYSTEM SYNC: ${milestone}%`,
+          message: "Significant progress logged in the core matrix.",
           icon: Sparkles,
+          color: "text-white",
+          glow: "shadow-white/50",
+          border: "border-white/30",
         };
     }
   };
 
-  const { title, message, icon: Icon } = getMilestoneMessage();
+  const { title, subtitle, message, icon: Icon, color, glow, border } = getMilestoneMessage();
 
   return (
     <>
@@ -71,90 +85,145 @@ export function MilestoneCelebration({
           width={width}
           height={height}
           recycle={true}
-          numberOfPieces={200}
-          gravity={0.3}
+          numberOfPieces={500}
+          gravity={0.15}
+          colors={['#A855F7', '#EC4899', '#3B82F6', '#FFFFFF', '#F59E0B']}
         />
       )}
-      <Modal open={true} onClose={onClose} showCloseButton={false} size="lg">
-        <div className="text-center py-8 relative overflow-hidden">
-          {/* Animated Background */}
-          <motion.div
-            className="absolute inset-0 opacity-10"
-            animate={{
-              backgroundPosition: ["0% 0%", "100% 100%"],
-            }}
-            transition={{
-              repeat: Infinity,
-              duration: 5,
-              ease: "linear",
-            }}
-            style={{
-              backgroundImage: "radial-gradient(circle, #3B82F6 2px, transparent 2px)",
-              backgroundSize: "40px 40px",
-            }}
-          />
 
-          <div className="relative z-10">
-            {/* Icon */}
+      {/* Custom Overlay to ensure centering and darkness independent of shared Modal */}
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute inset-0 bg-black/95 backdrop-blur-3xl"
+          onClick={onClose}
+        />
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.5, rotateX: 20, y: 100 }}
+          animate={{ opacity: 1, scale: 1, rotateX: 0, y: -50 }}
+          exit={{ opacity: 0, scale: 0.9, rotateX: 10 }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          className="relative w-full max-w-lg z-[10000]"
+        >
+          {/* Main Card Container */}
+          <div className="relative overflow-hidden bg-[#030303] border border-white/10 rounded-3xl w-full p-1 shadow-2xl shadow-purple-900/40">
+
+            {/* Outer Glow Animation */}
             <motion.div
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ duration: 0.6, type: "spring", stiffness: 200 }}
-              className="mb-6"
-            >
-              <div className="w-24 h-24 mx-auto bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-2xl">
-                <Icon className="w-12 h-12 text-white" />
+              className={`absolute inset-0 bg-gradient-to-r from-transparent via-${color.split('-')[1] || 'purple'}-500/30 to-transparent`}
+              animate={{ x: ['-100%', '100%'] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            />
+
+            <div className="relative bg-[#080808] rounded-[20px] p-10 flex flex-col items-center text-center z-10 overflow-hidden">
+
+              {/* Spotlight Effect */}
+              <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-${color.split('-')[1] || 'purple'}-500/20 blur-[100px] pointer-events-none`} />
+
+              {/* Background Grid */}
+              <div className="absolute inset-0 opacity-20 bg-[linear-gradient(45deg,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(-45deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:20px_20px]" />
+
+              {/* Hexagon Icon Container */}
+              <motion.div
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ duration: 0.8, type: "spring", bounce: 0.5 }}
+                className={`mb-8 relative w-32 h-32 flex items-center justify-center`}
+              >
+                <Hexagon className={`w-full h-full absolute ${color} opacity-20 animate-spin-slow`} strokeWidth={1} />
+                <Hexagon className={`w-24 h-24 absolute ${color} opacity-40`} strokeWidth={2} />
+
+                {/* Glowing Core */}
+                <div className={`relative z-10 p-6 rounded-full bg-gradient-to-br from-gray-900 to-black border ${border} ${glow} shadow-[0_0_50px_rgba(168,85,247,0.4)]`}>
+                  <Icon className={`w-12 h-12 ${color} drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]`} />
+                </div>
+              </motion.div>
+
+              {/* Text Content */}
+              <div className="space-y-4 mb-10 relative z-20 w-full">
+                <motion.h2
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-4xl font-bold text-white uppercase tracking-[0.2em] font-mono drop-shadow-lg"
+                >
+                  {title}
+                </motion.h2>
+
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="flex justify-center"
+                >
+                  <span className={`px-4 py-1.5 rounded-full border ${border} bg-${color.split('-')[1] || 'purple'}-500/10 text-sm font-mono font-bold ${color} tracking-wider shadow-[0_0_20px_rgba(0,0,0,0.5)]`}>
+                    {subtitle}
+                  </span>
+                </motion.div>
+
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="text-gray-400 text-base max-w-sm mx-auto leading-relaxed border-t border-b border-white/5 py-4"
+                >
+                  {message}
+                </motion.p>
               </div>
-            </motion.div>
 
-            {/* Title */}
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-4xl font-bold text-gray-900 mb-3"
-            >
-              {title}
-            </motion.h2>
+              {/* Progress Bar (Holographic Style) */}
+              <motion.div
+                initial={{ opacity: 0, scaleX: 0 }}
+                animate={{ opacity: 1, scaleX: 1 }}
+                transition={{ delay: 0.5, duration: 0.8 }}
+                className="w-full h-14 bg-black/60 border border-white/10 rounded-xl relative overflow-hidden mb-8 group shadow-inner"
+              >
+                <div className="absolute inset-0 flex items-center justify-between px-5 z-20">
+                  <span className="text-[10px] font-mono text-gray-500 font-bold tracking-widest">INIT_SEQUENCE</span>
+                  <span className="text-[10px] font-mono text-gray-500 font-bold tracking-widest">TARGET_LOCK</span>
+                </div>
 
-            {/* Message */}
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="text-lg text-gray-600 mb-6"
-            >
-              {message}
-            </motion.p>
+                {/* Progress Fill */}
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${milestone}%` }}
+                  transition={{ delay: 0.8, duration: 1.5, ease: "circOut" }}
+                  className={`absolute top-0 bottom-0 left-0 bg-gradient-to-r from-${color.split('-')[1] || 'purple'}-900/50 to-${color.split('-')[1] || 'purple'}-500/50 border-r-2 border-${color.split('-')[1] || 'purple'}-400 relative`}
+                >
+                  <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mixed-blend-overlay"></div>
+                </motion.div>
 
-            {/* Progress Display */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4, type: "spring" }}
-              className="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-2xl p-6 mb-6 border-2 border-purple-200"
-            >
-              <div className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                <CountUp from={0} to={milestone} />%
-              </div>
-              <p className="text-sm text-gray-600">
-                <CountUp from={0} to={currentPixels} /> / {totalPixels.toLocaleString()} pixels
-              </p>
-            </motion.div>
+                {/* Centered Pixel Count */}
+                <div className="absolute inset-0 flex items-center justify-center z-30 mix-blend-plus-lighter">
+                  <span className="text-sm font-mono text-white font-bold drop-shadow-md">
+                    <CountUp from={0} to={currentPixels} /> / {totalPixels.toLocaleString()} PIXELS
+                  </span>
+                </div>
+              </motion.div>
 
-            {/* Close Button */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-            >
-              <Button onClick={onClose} className="w-full" size="lg">
-                Continue Your Journey
-              </Button>
-            </motion.div>
+              {/* Action Button */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="w-full relative z-20"
+              >
+                <SystemButton
+                  onClick={onClose}
+                  className="w-full justify-center py-4 text-lg font-bold tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-transform duration-200 shadow-[0_0_30px_rgba(168,85,247,0.3)]"
+                  variant="gradient-purple"
+                >
+                  CONTINUE MISSION
+                </SystemButton>
+              </motion.div>
+
+            </div>
           </div>
-        </div>
-      </Modal>
+        </motion.div>
+      </div>
     </>
   );
 }

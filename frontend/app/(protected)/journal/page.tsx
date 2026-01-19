@@ -67,7 +67,7 @@ export default function JournalPage() {
     const completedTasks = Array.from(taskCompletions.entries()).map(([todoId, completed]) => ({
       todoId,
       completed,
-      notes: null,
+      notes: undefined,
     }));
 
     submitJournal({
@@ -110,10 +110,10 @@ export default function JournalPage() {
         animate={{ opacity: 1, y: 0 }}
         className="text-center py-6"
       >
-        <h1 className="font-mono text-2xl font-bold text-gray-900 mb-2 uppercase tracking-wider">
+        <h1 className="font-mono text-2xl font-bold text-foreground mb-2 uppercase tracking-wider">
           Night Journal
         </h1>
-        <p className="font-mono text-xs text-gray-600">
+        <p className="font-mono text-xs text-foreground-secondary">
           {format(new Date(), "EEEE, MMMM d, yyyy").toUpperCase()}
         </p>
       </motion.div>

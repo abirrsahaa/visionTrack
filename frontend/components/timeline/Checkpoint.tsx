@@ -35,9 +35,8 @@ export function Checkpoint({ snapshot, index, isMonthly = false, onClick }: Chec
       whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once: true, margin: "-100px" }}
       transition={{ duration: 0.6, delay: index * 0.1 }}
-      className={`relative flex items-center gap-8 mb-32 ${
-        isLeft ? "flex-row" : "flex-row-reverse"
-      }`}
+      className={`relative flex items-center gap-8 mb-32 ${isLeft ? "flex-row" : "flex-row-reverse"
+        }`}
     >
       {/* Checkpoint Content Card */}
       <motion.div
@@ -45,18 +44,17 @@ export function Checkpoint({ snapshot, index, isMonthly = false, onClick }: Chec
         onClick={onClick}
         className={`flex-1 max-w-md cursor-pointer ${isLeft ? "text-right" : "text-left"}`}
       >
-        <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 overflow-hidden group hover:shadow-2xl hover:border-blue-300 transition-all duration-300">
+        <div className="dark-card rounded-2xl shadow-xl overflow-hidden group hover:card-shadow-lg hover:border-purple/50 transition-all duration-300">
           {/* Header with gradient */}
           <div
-            className={`p-6 ${
-              isMonthly
-                ? "bg-gradient-to-r from-purple-500 to-pink-500"
+            className={`p-6 ${isMonthly
+                ? "bg-gradient-to-r from-purple-600 to-pink-600"
                 : isHighAchievement
-                ? "bg-gradient-to-r from-blue-500 to-cyan-500"
-                : "bg-gradient-to-r from-gray-400 to-gray-500"
-            }`}
+                  ? "bg-gradient-to-r from-blue-600 to-cyan-600"
+                  : "bg-surface-tertiary"
+              }`}
           >
-            <div className="flex items-center justify-between text-white">
+            <div className="flex items-center justify-between text-foreground">
               <div className="flex items-center gap-2">
                 {isMonthly ? (
                   <Trophy className="w-6 h-6" />
@@ -76,7 +74,7 @@ export function Checkpoint({ snapshot, index, isMonthly = false, onClick }: Chec
 
           {/* Content */}
           <div className="p-6 space-y-4">
-            <div className="flex items-center gap-2 text-gray-600">
+            <div className="flex items-center gap-2 text-foreground-secondary">
               <Calendar className="w-4 h-4" />
               <span className="text-sm font-medium">
                 {format(parseISO(snapshot.snapshotDate), "MMMM d, yyyy")}
@@ -84,20 +82,20 @@ export function Checkpoint({ snapshot, index, isMonthly = false, onClick }: Chec
             </div>
 
             {/* Pixel Contribution */}
-            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-100">
+            <div className="bg-background-tertiary rounded-lg p-4 border border-white/5">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-semibold text-gray-700">Vision Board Contribution</span>
-                <TrendingUp className="w-4 h-4 text-blue-600" />
+                <span className="text-sm font-semibold text-foreground-secondary">Vision Board Contribution</span>
+                <TrendingUp className="w-4 h-4 text-purple-400" />
               </div>
-              <div className="text-3xl font-bold text-blue-600 mb-1">
+              <div className="text-3xl font-bold text-purple-400 mb-1">
                 {snapshot.pixelsSummary.totalPixels.toLocaleString()}
               </div>
-              <div className="text-xs text-gray-600">pixels revealed</div>
+              <div className="text-xs text-foreground-secondary">pixels revealed</div>
 
               {/* Mini Progress Bar */}
-              <div className="w-full h-2 bg-white rounded-full overflow-hidden mt-3 shadow-inner">
+              <div className="w-full h-2 bg-background rounded-full overflow-hidden mt-3 shadow-inner">
                 <motion.div
-                  className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
+                  className="h-full gradient-purple"
                   initial={{ width: 0 }}
                   whileInView={{ width: `${completionPercentage}%` }}
                   viewport={{ once: true }}
@@ -108,7 +106,7 @@ export function Checkpoint({ snapshot, index, isMonthly = false, onClick }: Chec
 
             {/* Narrative Preview */}
             {snapshot.narrativeText && (
-              <p className="text-sm text-gray-600 line-clamp-2 italic">
+              <p className="text-sm text-foreground-secondary line-clamp-2 italic">
                 "{snapshot.narrativeText}"
               </p>
             )}
@@ -137,9 +135,8 @@ export function Checkpoint({ snapshot, index, isMonthly = false, onClick }: Chec
         <div className="relative">
           {/* Glow Effect */}
           <motion.div
-            className={`absolute inset-0 rounded-full ${
-              isMonthly ? "bg-purple-400" : isHighAchievement ? "bg-blue-400" : "bg-gray-300"
-            } blur-xl opacity-50`}
+            className={`absolute inset-0 rounded-full ${isMonthly ? "bg-purple-600" : isHighAchievement ? "bg-blue-600" : "bg-gray-600"
+              } blur-xl opacity-50`}
             animate={{
               scale: [1, 1.3, 1],
               opacity: [0.3, 0.6, 0.3],
@@ -149,20 +146,19 @@ export function Checkpoint({ snapshot, index, isMonthly = false, onClick }: Chec
 
           {/* Marker Circle */}
           <div
-            className={`relative w-16 h-16 rounded-full flex items-center justify-center shadow-2xl border-4 border-white ${
-              isMonthly
-                ? "bg-gradient-to-br from-purple-500 to-pink-500"
+            className={`relative w-16 h-16 rounded-full flex items-center justify-center shadow-2xl border-4 border-background ${isMonthly
+                ? "bg-gradient-to-br from-purple-600 to-pink-600"
                 : isHighAchievement
-                ? "bg-gradient-to-br from-blue-500 to-cyan-500"
-                : "bg-gradient-to-br from-gray-400 to-gray-500"
-            }`}
+                  ? "bg-gradient-to-br from-blue-600 to-cyan-600"
+                  : "bg-surface-tertiary"
+              }`}
           >
             {isMonthly ? (
               <Trophy className="w-8 h-8 text-white" />
             ) : isHighAchievement ? (
               <Target className="w-7 h-7 text-white" />
             ) : (
-              <MapPin className="w-7 h-7 text-white" />
+              <MapPin className="w-7 h-7 text-foreground" />
             )}
           </div>
         </div>

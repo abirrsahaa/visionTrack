@@ -21,7 +21,7 @@ export default function TimelinePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-arch-dark-bg-primary flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <motion.div
           className="text-center"
           initial={{ opacity: 0, scale: 0.8 }}
@@ -33,9 +33,9 @@ export default function TimelinePage() {
             transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
             className="inline-block mb-4"
           >
-            <Loader2 className="w-16 h-16 text-arch-dark-text-primary" />
+            <Loader2 className="w-16 h-16 text-foreground" />
           </motion.div>
-          <p className="font-mono text-xs text-arch-dark-text-secondary">LOADING YOUR JOURNEY...</p>
+          <p className="font-mono text-xs text-foreground-secondary">LOADING YOUR JOURNEY...</p>
         </motion.div>
       </div>
     );
@@ -43,9 +43,9 @@ export default function TimelinePage() {
 
   if (!timeline || timeline.length === 0) {
     return (
-      <div className="min-h-screen bg-arch-dark-bg-primary flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <motion.div
-          className="bg-arch-dark-bg-secondary rounded-lg border border-arch-dark-border-primary p-12 text-center max-w-md"
+          className="bg-background-secondary rounded-lg border border-gray-800 p-12 text-center max-w-md"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
@@ -53,18 +53,18 @@ export default function TimelinePage() {
           <motion.div
             animate={{ y: [0, -10, 0] }}
             transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-            className="w-20 h-20 bg-arch-dark-bg-tertiary rounded-full flex items-center justify-center mx-auto mb-6 border border-arch-dark-border-primary"
+            className="w-20 h-20 bg-background-tertiary rounded-full flex items-center justify-center mx-auto mb-6 border border-gray-700"
           >
             <span className="text-4xl">🗺️</span>
           </motion.div>
-          <h2 className="font-mono text-xl font-bold text-arch-dark-text-primary mb-4 uppercase tracking-wider">
+          <h2 className="font-mono text-xl font-bold text-foreground mb-4 uppercase tracking-wider">
             YOUR JOURNEY AWAITS
           </h2>
-          <p className="font-sans text-sm text-arch-dark-text-secondary mb-6">
+          <p className="font-sans text-sm text-foreground-secondary mb-6">
             Start journaling to see your progress unfold on this beautiful journey map
           </p>
           <motion.button
-            className="font-mono text-xs font-semibold bg-arch-dark-bg-tertiary border border-arch-dark-border-primary text-arch-dark-text-primary px-6 py-3 rounded hover:bg-arch-dark-bg-secondary transition-colors"
+            className="font-mono text-xs font-semibold bg-background-tertiary border border-gray-700 text-foreground px-6 py-3 rounded hover:bg-background-secondary transition-colors"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -76,7 +76,7 @@ export default function TimelinePage() {
   }
 
   return (
-    <div className="min-h-screen bg-arch-dark-bg-primary">
+    <div className="min-h-screen bg-background">
       <JourneyMap snapshots={timeline} onCheckpointClick={setSelectedSnapshot} />
 
       {/* Detail Modal */}
@@ -97,7 +97,7 @@ export default function TimelinePage() {
         >
           <motion.button
             onClick={() => setWeeksToShow((prev) => prev + 13)}
-            className="font-mono text-xs font-semibold bg-arch-dark-bg-secondary border-2 border-arch-dark-border-primary text-arch-dark-text-primary px-6 py-3 rounded hover:bg-arch-dark-bg-tertiary transition-colors"
+            className="font-mono text-xs font-semibold bg-background-secondary border-2 border-gray-700 text-foreground px-6 py-3 rounded hover:bg-background-tertiary transition-colors"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >

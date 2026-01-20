@@ -48,10 +48,10 @@ export function Checkpoint({ snapshot, index, isMonthly = false, onClick }: Chec
           {/* Header with gradient */}
           <div
             className={`p-6 ${isMonthly
-                ? "bg-gradient-to-r from-purple-600 to-pink-600"
-                : isHighAchievement
-                  ? "bg-gradient-to-r from-blue-600 to-cyan-600"
-                  : "bg-surface-tertiary"
+              ? "bg-gradient-to-r from-purple-600 to-pink-600"
+              : isHighAchievement
+                ? "bg-gradient-to-r from-blue-600 to-cyan-600"
+                : "bg-surface-tertiary"
               }`}
           >
             <div className="flex items-center justify-between text-foreground">
@@ -147,10 +147,10 @@ export function Checkpoint({ snapshot, index, isMonthly = false, onClick }: Chec
           {/* Marker Circle */}
           <div
             className={`relative w-16 h-16 rounded-full flex items-center justify-center shadow-2xl border-4 border-background ${isMonthly
-                ? "bg-gradient-to-br from-purple-600 to-pink-600"
-                : isHighAchievement
-                  ? "bg-gradient-to-br from-blue-600 to-cyan-600"
-                  : "bg-surface-tertiary"
+              ? "bg-gradient-to-br from-purple-600 to-pink-600"
+              : isHighAchievement
+                ? "bg-gradient-to-br from-blue-600 to-cyan-600"
+                : "bg-surface-tertiary"
               }`}
           >
             {isMonthly ? (

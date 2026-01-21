@@ -1,0 +1,223 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(uuid())
+  email           String    @unique
+  passwordHash    String
+  name            String?
+  timezone        String    @default("UTC")
+  bedtimeReminder String    @default("22:00:00")
+  morningReminder String    @default("07:00:00")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  domains         Domain[]
+  dailyJournals   DailyJournal[]
+  visionBoards    VisionBoard[]
+  boardDesigns    BoardDesign[]
+  timelineSnapshots TimelineSnapshot[]
+  reminders       Reminder[]
+
+  @@map("users")
+}
+
+model Domain {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  colorHex    String?
+  sortOrder   Int?
+  createdAt   DateTime @default(now())
+
+  images      DomainImage[]
+  goals       Goal[]
+  todos       Todo[]
+  pixelHistory PixelHistory[]
+
+  @@map("domains")
+}
+
+model DomainImage {
+  id         String   @id @default(uuid())
+  domainId   String
+  domain     Domain   @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  imageUrl   String
+  sortOrder  Int?
+  uploadedAt DateTime @default(now())
+
+  @@map("domain_images")
+}
+
+model Goal {
+  id            String    @id @default(uuid())
+  domainId      String
+  domain        Domain    @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  status        String    @default("active") // active, archived, completed
+  startDate     DateTime
+  targetDate    DateTime?
+  archivedAt    DateTime?
+  archiveReason String?
+  parentGoalId  String?
+  parentGoal    Goal?     @relation("GoalHistory", fields: [parentGoalId], references: [id])
+  childGoals    Goal[]    @relation("GoalHistory")
+  createdAt     DateTime  @default(now())
+
+  milestones    Milestone[]
+  todos         Todo[]
+
+  @@map("goals")
+}
+
+model Milestone {
+  id          String    @id @default(uuid())
+  goalId      String
+  goal        Goal      @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  title       String
+  targetDate  DateTime?
+  completedAt DateTime?
+  sortOrder   Int?
+
+  todos       Todo[]
+
+  @@map("milestones")
+}
+
+model Todo {
+  id            String    @id @default(uuid())
+  milestoneId   String?
+  milestone     Milestone? @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+  goalId        String?
+  goal          Goal?      @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  domainId      String?
+  domain        Domain?    @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  scheduledDate DateTime?
+  status        String    @default("pending") // pending, approved, completed, skipped
+  approvedAt    DateTime?
+  completedAt   DateTime?
+  effortWeight  Decimal   @default(1.0)
+  createdAt     DateTime  @default(now())
+
+  journalCompletions JournalTaskCompletion[]
+
+  @@map("todos")
+}
+
+model DailyJournal {
+  id             String    @id @default(uuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  journalDate    DateTime
+  entryText      String?
+  emotionalState String?
+  energyLevel    Int?
+  aiReflection   String?
+  submittedAt    DateTime  @default(now())
+
+  taskCompletions JournalTaskCompletion[]
+  pixelHistory    PixelHistory[]
+
+  @@unique([userId, journalDate])
+  @@map("daily_journals")
+}
+
+model JournalTaskCompletion {
+  id        String       @id @default(uuid())
+  journalId String
+  journal   DailyJournal @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  todoId    String
+  todo      Todo         @relation(fields: [todoId], references: [id], onDelete: Cascade)
+  completed Boolean      @default(true)
+  notes     String?
+
+  @@map("journal_task_completions")
+}
+
+model VisionBoard {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  boardType       String // annual, quarterly, monthly, weekly
+  periodStart     DateTime
+  periodEnd       DateTime
+  designStyle     String?
+  layoutMetadata  Json?
+  baseImageUrl    String?
+  currentImageUrl String?
+  totalPixels     Int?
+  coloredPixels   Int       @default(0)
+  createdAt       DateTime  @default(now())
+  lastUpdated     DateTime  @default(now())
+
+  pixelHistory    PixelHistory[]
+
+  @@map("vision_boards")
+}
+
+model PixelHistory {
+  id             String       @id @default(uuid())
+  visionBoardId  String
+  visionBoard    VisionBoard  @relation(fields: [visionBoardId], references: [id], onDelete: Cascade)
+  domainId       String
+  domain         Domain       @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  journalId      String?
+  journal        DailyJournal? @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  pixelsEarned   Int
+  pixelCoordinates Json? // [[x1,y1], [x2,y2], ...]
+  earnedAt       DateTime     @default(now())
+  immutable      Boolean      @default(false)
+
+  @@map("pixel_history")
+}
+
+model BoardDesign {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  designName      String?
+  designStyle     String?
+  layoutAlgorithm String?
+  previewUrl      String?
+  isActive        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  @@map("board_designs")
+}
+
+model TimelineSnapshot {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  snapshotDate  DateTime
+  snapshotType  String? // daily, weekly, monthly, quarterly
+  boardImageUrl String?
+  narrativeText String?
+  animationUrl  String?
+  createdAt     DateTime @default(now())
+
+  @@map("timeline_snapshots")
+}
+
+model Reminder {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reminderType  String? // bedtime_journal, morning_validation
+  scheduledTime String // HH:MM:SS
+  lastSent      DateTime?
+  enabled       Boolean  @default(true)
+
+  @@map("reminders")
+}

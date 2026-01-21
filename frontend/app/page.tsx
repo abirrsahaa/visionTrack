@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAuthStore } from "@/lib/stores";
 import { SystemButton } from "@/components/shared/SystemButton";
@@ -12,33 +12,17 @@ import { JourneyAnimation } from "@/components/landing/JourneyAnimation";
 import { FeatureCard } from "@/components/landing/FeatureCard";
 import { CountUp } from "@/components/shared/CountUp";
 import { Mountain, Cloud, Sparkles, Target, Sparkles as SparklesIcon, Brain, BookOpen, ArrowRight } from "lucide-react";
+import { TypingHeroText } from "@/components/landing/TypingHeroText";
 
 export default function HomePage() {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
-  const [displayedText, setDisplayedText] = useState("");
-  const fullText = "Your Effort Becomes Art";
 
   useEffect(() => {
     if (isAuthenticated) {
       router.push("/dashboard");
     }
   }, [isAuthenticated, router]);
-
-  // Typing effect for hero
-  useEffect(() => {
-    let index = 0;
-    const interval = setInterval(() => {
-      if (index < fullText.length) {
-        setDisplayedText(fullText.slice(0, index + 1));
-        index++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 100);
-
-    return () => clearInterval(interval);
-  }, []);
 
   return (
     <div className="min-h-screen bg-background overflow-hidden relative selection:bg-purple/30 selection:text-white">
@@ -116,27 +100,7 @@ export default function HomePage() {
               </span>
             </motion.div>
 
-            <motion.h1
-              className="text-5xl sm:text-7xl md:text-8xl font-bold tracking-tight text-foreground mb-6 font-mono"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              <span className="block mb-2">{displayedText}</span>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-orange-500">
-                {fullText.slice(displayedText.length)}
-              </span>
-              {displayedText.length === fullText.length && (
-                <motion.span
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: [1, 0, 1] }}
-                  transition={{ repeat: Infinity, duration: 1 }}
-                  className="inline-block ml-2 text-purple-500"
-                >
-                  |
-                </motion.span>
-              )}
-            </motion.h1>
+            <TypingHeroText />
 
             <motion.p
               className="mt-8 text-xl sm:text-2xl leading-relaxed text-foreground-secondary max-w-2xl mx-auto font-sans"

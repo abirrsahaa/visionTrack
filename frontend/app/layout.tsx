@@ -15,18 +15,30 @@ export const metadata: Metadata = {
   description: "Witness your effort turning into art",
 };
 
+import { ClerkProvider } from "@clerk/nextjs";
+import { dark } from "@clerk/themes";
+
+// ... imports ...
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased bg-background text-foreground`}>
-        <SmoothScroll>
-          <Providers>{children}</Providers>
-        </SmoothScroll>
-      </body>
-    </html>
+    <ClerkProvider
+      appearance={{
+        baseTheme: dark,
+        variables: { colorPrimary: '#a855f7', colorBackground: '#050505' }
+      }}
+    >
+      <html lang="en" className="dark" suppressHydrationWarning>
+        <body className={`${inter.variable} font-sans antialiased bg-background text-foreground`}>
+          <SmoothScroll>
+            <Providers>{children}</Providers>
+          </SmoothScroll>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

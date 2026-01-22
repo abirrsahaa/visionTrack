@@ -1,17 +1,9 @@
-import { apiClient, shouldUseMockData } from "./client";
-import type { TimelineSnapshot } from "@/lib/types";
-import { generateTimelineSnapshots } from "@/lib/utils/mockData6Months";
+import { getTimelineWeeks } from "@/app/actions";
 
 export const timelineApi = {
   getWeeks: async (count: number = 26): Promise<TimelineSnapshot[]> => {
-    if (shouldUseMockData()) {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      const allSnapshots = generateTimelineSnapshots();
-      return allSnapshots.slice(-count);
-    }
-
-    const response = await apiClient.get<TimelineSnapshot[]>(`/timeline?weeks=${count}`);
-    return response.data;
+    // Call server action directly
+    return await getTimelineWeeks(count);
   },
 
   getWeeklyWrap: async (date: string): Promise<TimelineSnapshot> => {

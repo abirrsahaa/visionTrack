@@ -7,8 +7,18 @@ import type {
 } from "@/lib/types";
 import { mockGoals6Months } from "@/lib/utils/mockData6Months";
 
+import { getGoals } from "@/app/actions";
+
+// ... existing imports ...
+
 export const goalsApi = {
   getByDomain: async (domainId: string): Promise<Goal[]> => {
+    // We could optimize this with a backend filter, but for now filtering fetching all is okay or implementation specific
+    // Since we don't have getGoalsByDomain action yet, we can filter client side or implement it. 
+    // Let's filter client side for MVP or use getGoals and filter.
+    const allGoals = await getGoals();
+    if (allGoals.length > 0) return allGoals.filter(g => g.domainId === domainId);
+
     if (shouldUseMockData()) {
       await new Promise((resolve) => setTimeout(resolve, 300));
       return mockGoals6Months.filter((g) => g.domainId === domainId);
@@ -19,51 +29,15 @@ export const goalsApi = {
   },
 
   getAll: async (): Promise<Goal[]> => {
+    // Direct Server Action
+    const goals = await getGoals();
+    if (goals && goals.length > 0) return goals;
+
     if (shouldUseMockData()) {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
-      // Attempt to load from localStorage for Onboarding persistence
-      if (typeof window !== "undefined") {
-        const storedData = localStorage.getItem("vision-board-data");
-        if (storedData) {
-          try {
-            const userData = JSON.parse(storedData);
-            if (userData.goals && Array.isArray(userData.goals) && userData.domains) {
-              return userData.goals.map((g: any, index: number) => {
-                // Find domain index for stable ID
-                const domainIndex = userData.domains.findIndex((d: any) => d.name === g.domain);
-                const domainId = domainIndex >= 0 ? `dom_${domainIndex}` : `dom_${index}`;
-
-                return {
-                  id: `goal_${index}`,
-                  domainId: domainId,
-                  title: `Strategic Plan: ${g.domain}`,
-                  description: `AI-generated roadmap for ${g.domain}`,
-                  status: "active",
-                  startDate: new Date().toISOString(),
-                  targetDate: null,
-                  milestones: (g.milestones || []).map((m: string, mIndex: number) => ({
-                    id: `mile_${index}_${mIndex}`,
-                    title: m,
-                    targetDate: null,
-                    completedAt: null,
-                    sortOrder: mIndex
-                  })),
-                  createdAt: userData.createdAt || new Date().toISOString(),
-                };
-              });
-            }
-          } catch (e) {
-            console.error("Failed to parse local stored vision data for goals", e);
-          }
-        }
-      }
-
+      // ... existing mock logic ...
       return mockGoals6Months;
     }
-
-    const response = await apiClient.get<Goal[]>("/goals");
-    return response.data;
+    return [];
   },
 
   create: async (data: CreateGoalRequest): Promise<Goal> => {

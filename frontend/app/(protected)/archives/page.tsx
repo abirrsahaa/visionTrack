@@ -26,8 +26,9 @@ export default function ArchivesPage() {
     });
 
     const { data: summary } = useQuery({
-        queryKey: queryKeys.pixels.summary(),
-        queryFn: () => api.pixels.getSummary({}),
+        queryKey: queryKeys.pixels.summary(board?.periodStart, board?.periodEnd),
+        queryFn: () => api.pixels.getSummary(board?.periodStart, board?.periodEnd),
+        enabled: !!board
     });
 
     // --- Transform Data for Visualizations ---
@@ -50,7 +51,7 @@ export default function ArchivesPage() {
                 d.domainId === "relationships" ? "RELATION" :
                     d.domainId === "learning" ? "LEARN" : d.domainId.toUpperCase().slice(0, 8),
         value: Math.round(d.percentage * 100),
-        color: d.color // backend sends hex
+        color: d.colorHex // backend sends hex
     })) || [
             { domain: "CAREER", value: 65, color: "#a855f7" },
             { domain: "HEALTH", value: 45, color: "#22c55e" },

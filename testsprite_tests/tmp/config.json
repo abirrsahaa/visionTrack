@@ -1,0 +1,18 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:3000/dashboard",
+  "loginUser": "abir",
+  "loginPassword": "Mannu#123",
+  "executionArgs": {
+    "projectName": "vision",
+    "projectPath": "/Users/abir/Developer/vision",
+    "testIds": [],
+    "additionalInstruction": "",
+    "envs": {
+      "API_KEY": "sk-user-tbwGQaFAj6qnkxTrBa6XweRZeYDaiBN0JylXDQQkV5DTmJg69LSIForb7qBaDqg85JlRch5hkC40a7wRGo3VLZSxGOBb597vhk36pObcLr1JVgRtTFenZa-SINVbsnBYkIU"
+    }
+  },
+  "proxy": "http://218b929c-e3c8-4b75-aa65-7663bb1927f6:l4XnyJt5zgYWiCWKxeWFkhDuSEkJMG15@tun.testsprite.com:8080"
+}

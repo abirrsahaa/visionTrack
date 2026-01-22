@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { useAuthStore } from "@/lib/stores";
+import { useAuth } from "@clerk/nextjs";
 import { SystemButton } from "@/components/shared/SystemButton";
 import { ParallaxSection } from "@/components/landing/ParallaxSection";
 import { ScrollReveal, StaggerReveal } from "@/components/landing/ScrollReveal";
@@ -15,15 +15,15 @@ import { Mountain, Cloud, Sparkles, Target, Sparkles as SparklesIcon, Brain, Boo
 
 export default function HomePage() {
   const router = useRouter();
-  const { isAuthenticated } = useAuthStore();
+  const { isSignedIn } = useAuth();
   const [displayedText, setDisplayedText] = useState("");
   const fullText = "Your Effort Becomes Art";
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isSignedIn) {
       router.push("/dashboard");
     }
-  }, [isAuthenticated, router]);
+  }, [isSignedIn, router]);
 
   // Typing effect for hero
   useEffect(() => {
@@ -154,7 +154,7 @@ export default function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.8 }}
             >
-              <Link href="/signup">
+              <Link href="/sign-up">
                 <SystemButton
                   variant="gradient-purple"
                   size="lg"
@@ -164,7 +164,7 @@ export default function HomePage() {
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </SystemButton>
               </Link>
-              <Link href="/login">
+              <Link href="/sign-in">
                 <SystemButton
                   variant="outline"
                   size="lg"
@@ -324,7 +324,7 @@ export default function HomePage() {
                 Join thousands who are turning their goals into beautiful, tangible progress.
                 Start your visual journey today.
               </p>
-              <Link href="/signup">
+              <Link href="/sign-up">
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}

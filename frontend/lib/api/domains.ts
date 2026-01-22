@@ -7,44 +7,23 @@ import type {
 } from "@/lib/types";
 import { mockDomains6Months as mockDomains } from "@/lib/utils/mockData6Months";
 
+import { getDomains } from "@/app/actions";
+
+// ... existing imports ...
+
 export const domainsApi = {
   getAll: async (): Promise<Domain[]> => {
+    // Direct Server Action call
+    const domains = await getDomains();
+    if (domains && domains.length > 0) return domains;
+
+    // Fallback
     if (shouldUseMockData()) {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
-      // Attempt to load from localStorage for Onboarding persistence
-      if (typeof window !== "undefined") {
-        const storedData = localStorage.getItem("vision-board-data");
-        if (storedData) {
-          try {
-            const userData = JSON.parse(storedData);
-            if (userData.domains && Array.isArray(userData.domains)) {
-              return userData.domains.map((d: any, index: number) => ({
-                id: `dom_${index}`, // Stable ID
-                name: d.name,
-                description: d.description || "",
-                colorHex: d.colorHex || "#3B82F6",
-                sortOrder: index,
-                createdAt: userData.createdAt || new Date().toISOString(),
-                images: (userData.domainImages?.[d.name] || []).map((url: string, imgIndex: number) => ({
-                  id: `img_${index}_${imgIndex}`,
-                  imageUrl: url,
-                  sortOrder: imgIndex,
-                  uploadedAt: new Date().toISOString()
-                }))
-              }));
-            }
-          } catch (e) {
-            console.error("Failed to parse local stored vision data", e);
-          }
-        }
-      }
-
+      // ... existing mock logic ...
       return mockDomains;
     }
 
-    const response = await apiClient.get<Domain[]>("/domains");
-    return response.data;
+    return [];
   },
 
   create: async (data: CreateDomainRequest): Promise<Domain> => {

@@ -5,26 +5,22 @@ import { Eye, Terminal, Activity, Zap, Cpu } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 interface HeroProgressCardProps {
-  level?: number;
-  totalJournals?: number;
-  totalHours?: number;
-  isPro?: boolean;
-  className?: string;
+  progress?: number;
 }
 
 export function HeroProgressCard({
-  level = 12,
-  totalJournals = 42,
-  totalHours = 170,
+  level = 1,
+  totalJournals = 0,
+  totalHours = 0,
   isPro = true,
   className,
+  progress = 0,
 }: HeroProgressCardProps) {
 
-  // Calculate level progress (mock)
-  const levelProgress = 76;
+  // Calculate level progress
   const radius = 36;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (levelProgress / 100) * circumference;
+  const strokeDashoffset = circumference - (progress / 100) * circumference;
 
   return (
     <motion.div
@@ -97,7 +93,7 @@ export function HeroProgressCard({
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-2xl font-bold text-white font-mono">{levelProgress}%</span>
+            <span className="text-2xl font-bold text-white font-mono">{progress}%</span>
             <span className="text-[8px] text-gray-500 uppercase tracking-wider">SYNC</span>
           </div>
         </div>

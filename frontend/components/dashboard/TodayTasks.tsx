@@ -18,7 +18,7 @@ export function TodayTasks() {
     queryFn: api.todos.getToday,
   });
 
-  const completedTasks = todayTasks?.filter(task => task.completed)?.length || 0;
+  const completedTasks = todayTasks?.filter(task => task.completedAt)?.length || 0;
   const totalTasks = todayTasks?.length || 0;
   const completionPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
@@ -90,14 +90,14 @@ export function TodayTasks() {
               >
                 <input
                   type="checkbox"
-                  checked={task.completed || false}
+                  checked={!!task.completedAt}
                   readOnly
                   className="form-checkbox h-5 w-5 text-purple rounded border-gray-300"
                 />
                 <div className="flex-1">
                   <p className={cn(
                     "font-medium text-foreground",
-                    task.completed && "line-through text-foreground-tertiary"
+                    task.completedAt && "line-through text-foreground-tertiary"
                   )}>
                     {task.title}
                   </p>
@@ -105,7 +105,7 @@ export function TodayTasks() {
                     <p className="text-xs text-foreground-tertiary mt-0.5">{task.description}</p>
                   )}
                 </div>
-                {task.completed && (
+                {task.completedAt && (
                   <CheckCircle2 className="w-5 h-5 text-green-500" />
                 )}
               </motion.div>

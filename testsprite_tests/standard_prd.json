@@ -1,0 +1,334 @@
+{
+  "meta": {
+    "project": "Visual Life Execution System",
+    "date": "2026-01-21",
+    "prepared_by": "Software Development Manager"
+  },
+  "product_overview": "The Visual Life Execution System is a SaaS platform that transforms user effort into evolving visual art representing multi-domain life visions. It integrates AI coaching, adaptive daily loops, and narrative-driven introspection to help users visualize, track, and evolve their life goals through progressive pixelated vision boards and an interactive timeline experience.",
+  "core_goals": [
+    "Enable users to define and manage multi-domain life visions and goals.",
+    "Provide AI-assisted goal decomposition and coaching for actionable planning.",
+    "Visualize user progress as evolving pixelated vision boards that transform from grayscale to colorful art.",
+    "Support adaptive daily routines with journal reflections and task validations to maintain engagement.",
+    "Allow goal mutation without data loss to preserve user progress and maintain visual continuity.",
+    "Generate periodic narrative wraps and animations summarizing user journeys.",
+    "Offer customizable design styles and export options for sharing and personal reflection.",
+    "Ensure privacy, security, and scalability using modern authentication, storage, and background job systems."
+  ],
+  "key_features": [
+    "Authentication system with secure user registration, login, and JWT session management.",
+    "Multi-step onboarding for vision definition, domain setup with image uploads, design style selection, and goal decomposition.",
+    "Dynamic dashboard displaying vision boards, progress tracking, journal panel, tasks, and domain management.",
+    "Progressive pixelation system mapping user effort into colored pixels on domain-specific vision boards.",
+    "Journal system capturing daily reflections linked to task completion with AI-driven emotional and energy analysis.",
+    "Task management with AI-generated task suggestions, validation, adjustment, and completion tracking.",
+    "Timeline and weekly wrap features with AI-generated narratives and animated video summarization.",
+    "Multiple board design styles (grid, collage, cinematic, minimalist, symmetric) with user selection ability.",
+    "Reminder system for bedtime journal entries and morning task validations with push notifications.",
+    "Goal mutation capabilities that archive old goals, lock progress, and create new goals preserving historical context.",
+    "Export functionalities for wallpapers (mobile/desktop) and journey videos with shareable links.",
+    "Global state management with React Query and Zustand, with performant frontend using React, Next.js, and Tailwind CSS.",
+    "Robust backend services using Node.js/TypeScript with PostgreSQL, Redis, S3-compatible storage, and background job queues.",
+    "AI integration leveraging Claude and OpenAI APIs for coaching, reflection interpretation, task and goal decomposition, and story generation."
+  ],
+  "user_flow_summary": [
+    "Onboarding Flow: Users define life vision, set up domains with inspirational images, select preferred vision board design, and approve AI-decomposed goals with milestones and tasks.",
+    "Daily Loop: Evening bedtime reminders prompt journaling with task completion. AI reflection interprets entries driving pixel updates and next-day task generation. Morning reminders present user tasks for acceptance, adjustment, or skipping.",
+    "Goal Change Flow: Users can change goals without resetting progress, archiving old goals while locking pixel progress and initiating new goals with transition narratives preserving visual continuity.",
+    "Weekly Wrap Generation: Automated aggregation of weekly user journals and pixel progress to create narrative summaries and animations accessible via timeline view and notifications.",
+    "Vision Board Interaction: Users view and interact with progressively colorized boards reflecting their effort across domains with real-time visual feedback and milestone celebrations.",
+    "Timeline Exploration: Horizontal navigation through daily, weekly, monthly snapshots with story overlays and ability to export visual journeys.",
+    "Task Management: Validation and approval of AI-suggested tasks with inline chat for adjustments to maintain engagement and personalized planning.",
+    "Reminder Configuration: Users customize notification times for journaling and task validation aligned with personal routines."
+  ],
+  "validation_criteria": [
+    "Users must successfully register, authenticate, and maintain sessions using JWT with token refresh.",
+    "Onboarding completes with domains, images uploaded correctly, and AI-decomposed goals approved by the user.",
+    "Vision boards generate accurately in selected design style showing correct grayscale and color pixel mapping by domain.",
+    "Journal entries are submitted once per day with task completion accurately recorded and pixels awarded accordingly.",
+    "AI-generated reflections extract emotional state and energy level consistently and drive appropriate pixel and task updates.",
+    "Morning tasks are generated, displayed, and modifiable by users, correctly reflecting task approval status.",
+    "Goal mutations archive old goals, lock pixel histories, create new goals, and visualize transition narratives without data loss.",
+    "Weekly wrap animations generate timely with smooth pixel progression and narrative text matching user activity.",
+    "Reminders send as scheduled respecting user-configured times and timezones, with no duplicate notifications per day.",
+    "Exported wallpapers and videos are generated in specified resolutions with valid download URLs.",
+    "Frontend components render consistently across devices with responsive layouts and smooth animations.",
+    "Backend APIs respond correctly with proper authorization, error handling, and data integrity.",
+    "AI responses are validated against expected schema and fallback mechanisms ensure reliability.",
+    "Image uploads and storage are secure with proper access controls and signed URLs.",
+    "Background jobs execute scheduled tasks for reminders, board generation, pixel spillover, and timeline stitching reliably."
+  ],
+  "code_summary": {
+    "tech_stack": [
+      "TypeScript",
+      "Next.js 15",
+      "React 18",
+      "Tailwind CSS",
+      "Framer Motion",
+      "Zustand",
+      "React Query",
+      "Zod",
+      "date-fns",
+      "lucide-react",
+      "axios"
+    ],
+    "features": [
+      {
+        "name": "Authentication System",
+        "description": "User registration, login, and session management with JWT tokens",
+        "files": [
+          "app/(auth)/login/page.tsx",
+          "app/(auth)/signup/page.tsx",
+          "lib/api/auth.ts",
+          "lib/stores/authStore.ts",
+          "middleware.ts"
+        ]
+      },
+      {
+        "name": "Landing Page",
+        "description": "Award-winning landing page with parallax effects, journey animation, and feature showcase",
+        "files": [
+          "app/page.tsx",
+          "components/landing/ParallaxSection.tsx",
+          "components/landing/ScrollReveal.tsx",
+          "components/landing/JourneyAnimation.tsx",
+          "components/landing/FeatureCard.tsx"
+        ]
+      },
+      {
+        "name": "Onboarding Flow",
+        "description": "Multi-step onboarding wizard for vision definition, domain setup, image upload, design selection, and goal review",
+        "files": [
+          "app/onboarding/page.tsx",
+          "components/onboarding/OnboardingStepWrapper.tsx",
+          "components/onboarding/WelcomeStep.tsx",
+          "components/onboarding/VisionStep.tsx",
+          "components/onboarding/DomainImageStep.tsx",
+          "components/onboarding/DesignSelectorStep.tsx",
+          "components/onboarding/GoalReviewStep.tsx",
+          "components/onboarding/SetupStep.tsx"
+        ]
+      },
+      {
+        "name": "Dashboard",
+        "description": "Main command center with vision board display, progress tracking, journal panel, and domain status",
+        "files": [
+          "app/(protected)/dashboard/page.tsx",
+          "components/dashboard/VisionBoardWidget.tsx",
+          "components/dashboard/HeroProgressCard.tsx",
+          "components/dashboard/LifeDomainsPanel.tsx",
+          "components/dashboard/NightJournalPanel.tsx",
+          "components/dashboard/QuickActions.tsx",
+          "components/dashboard/WeeklyProgressChart.tsx",
+          "components/dashboard/MilestoneCelebration.tsx",
+          "components/dashboard/TodayTasks.tsx",
+          "components/dashboard/StreakBadge.tsx",
+          "components/dashboard/StreakCalendar.tsx",
+          "components/dashboard/ActivityFeed.tsx",
+          "components/dashboard/BonusHourBanner.tsx",
+          "components/dashboard/LivePixelCounter.tsx"
+        ]
+      },
+      {
+        "name": "Vision Board System",
+        "description": "Progressive pixelation system that transforms grayscale boards into colored art through user effort",
+        "files": [
+          "components/boards/PixelatedBoard.tsx",
+          "components/boards/VisionBoard.tsx",
+          "components/boards/DesignSelector.tsx",
+          "components/boards/MainBoardProgress.tsx",
+          "app/(protected)/boards/main/page.tsx",
+          "app/(protected)/boards/[type]/page.tsx",
+          "app/(protected)/boards/checkpoints/page.tsx",
+          "lib/api/boards.ts"
+        ]
+      },
+      {
+        "name": "Domain Management",
+        "description": "Create, edit, and manage life domains with image uploads and color assignments",
+        "files": [
+          "app/(protected)/domains/page.tsx",
+          "components/domains/DomainList.tsx",
+          "components/domains/DomainCard.tsx",
+          "components/domains/DomainEditor.tsx",
+          "components/domains/ImageUploader.tsx",
+          "lib/api/domains.ts",
+          "lib/stores/domainsStore.ts"
+        ]
+      },
+      {
+        "name": "Journal System",
+        "description": "Daily journal entries with task completion tracking and pixel earning",
+        "files": [
+          "app/(protected)/journal/page.tsx",
+          "components/journal/PixelEarnedAnimation.tsx",
+          "lib/api/journals.ts",
+          "lib/utils/bonusCalculator.ts",
+          "lib/utils/streakCalculator.ts"
+        ]
+      },
+      {
+        "name": "Task Management",
+        "description": "Task validation, approval, and completion tracking with AI-generated suggestions",
+        "files": [
+          "app/(protected)/tasks/validate/page.tsx",
+          "components/tasks/TaskValidationCard.tsx",
+          "components/shared/TaskItem.tsx",
+          "lib/api/todos.ts"
+        ]
+      },
+      {
+        "name": "Timeline View",
+        "description": "Journey visualization showing weekly/monthly progress with snapshots and narratives",
+        "files": [
+          "app/(protected)/timeline/page.tsx",
+          "components/timeline/JourneyMap.tsx",
+          "components/timeline/WeekCard.tsx",
+          "components/timeline/Checkpoint.tsx",
+          "components/timeline/SnapshotDetailModal.tsx",
+          "components/timeline/ParallaxLayer.tsx",
+          "lib/api/timeline.ts"
+        ]
+      },
+      {
+        "name": "Settings",
+        "description": "User preferences, reminder configuration, and account settings",
+        "files": [
+          "app/(protected)/settings/page.tsx"
+        ]
+      },
+      {
+        "name": "Analytics Dashboard",
+        "description": "Activity heatmap, domain radar, velocity charts, and statistical cards",
+        "files": [
+          "components/analytics/ActivityHeatmap.tsx",
+          "components/analytics/DomainRadar.tsx",
+          "components/analytics/VelocityChart.tsx",
+          "components/analytics/StatCard.tsx"
+        ]
+      },
+      {
+        "name": "Shared UI Components",
+        "description": "Reusable components including buttons, panels, progress bars, modals, and inputs",
+        "files": [
+          "components/shared/SystemButton.tsx",
+          "components/shared/SystemPanel.tsx",
+          "components/shared/Button.tsx",
+          "components/shared/Modal.tsx",
+          "components/shared/Input.tsx",
+          "components/shared/AnimatedButton.tsx",
+          "components/shared/AnimatedProgressBar.tsx",
+          "components/shared/ArchitectProgressBar.tsx",
+          "components/shared/ColorfulProgressBar.tsx",
+          "components/shared/CountUp.tsx",
+          "components/shared/PulseBadge.tsx",
+          "components/shared/DomainProgressItem.tsx",
+          "components/shared/SmoothScroll.tsx",
+          "components/shared/Logo.tsx"
+        ]
+      },
+      {
+        "name": "Navigation",
+        "description": "Main navigation bar with protected route handling",
+        "files": [
+          "components/layout/Navbar.tsx",
+          "app/(protected)/layout.tsx"
+        ]
+      },
+      {
+        "name": "API Client",
+        "description": "Centralized API client with mock data support and error handling",
+        "files": [
+          "lib/api/client.ts",
+          "lib/api/index.ts",
+          "lib/api/auth.ts",
+          "lib/api/domains.ts",
+          "lib/api/goals.ts",
+          "lib/api/todos.ts",
+          "lib/api/journals.ts",
+          "lib/api/boards.ts",
+          "lib/api/timeline.ts",
+          "lib/api/pixels.ts",
+          "lib/api/images.ts"
+        ]
+      },
+      {
+        "name": "State Management",
+        "description": "Global state management using Zustand stores",
+        "files": [
+          "lib/stores/authStore.ts",
+          "lib/stores/domainsStore.ts",
+          "lib/stores/index.ts"
+        ]
+      },
+      {
+        "name": "Data Fetching",
+        "description": "React Query setup with query keys and caching",
+        "files": [
+          "lib/query/queryClient.ts"
+        ]
+      },
+      {
+        "name": "Type Definitions",
+        "description": "TypeScript interfaces and types for all data models",
+        "files": [
+          "lib/types/index.ts"
+        ]
+      },
+      {
+        "name": "Utility Functions",
+        "description": "Helper functions for calculations, formatting, and data generation",
+        "files": [
+          "lib/utils/cn.ts",
+          "lib/utils/bonusCalculator.ts",
+          "lib/utils/streakCalculator.ts",
+          "lib/utils/generateJournalHistory.ts",
+          "lib/utils/mockData.ts",
+          "lib/utils/mockData6Months.ts",
+          "lib/utils/index.ts"
+        ]
+      },
+      {
+        "name": "Custom Hooks",
+        "description": "Reusable React hooks for window size and scroll direction",
+        "files": [
+          "lib/hooks/useWindowSize.ts",
+          "lib/hooks/useScrollDirection.ts"
+        ]
+      },
+      {
+        "name": "Theme Context",
+        "description": "Theme management for light/dark mode",
+        "files": [
+          "lib/contexts/ThemeContext.tsx"
+        ]
+      },
+      {
+        "name": "AI Integration",
+        "description": "AI model configuration and serverless functions for goal decomposition and domain extraction",
+        "files": [
+          "lib/ai/model.ts",
+          "app/functions/decomposition.ts",
+          "app/functions/extraction.ts"
+        ]
+      },
+      {
+        "name": "Background Jobs",
+        "description": "Inngest integration for scheduled tasks and workflows",
+        "files": [
+          "lib/inngest/client.ts",
+          "app/api/inngest/route.ts",
+          "app/functions/inngest/weekly-planning.ts"
+        ]
+      },
+      {
+        "name": "Providers",
+        "description": "React Query and theme providers setup",
+        "files": [
+          "app/providers.tsx",
+          "app/layout.tsx"
+        ]
+      }
+    ]
+  }
+}

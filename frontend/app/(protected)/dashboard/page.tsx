@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
@@ -22,6 +22,27 @@ export default function DashboardPage() {
   const [boardType, setBoardType] = useState<"weekly" | "monthly" | "annual">("weekly");
   const [celebratedMilestones, setCelebratedMilestones] = useState<Set<number>>(new Set());
   const [currentMilestone, setCurrentMilestone] = useState<number | null>(null);
+
+  const [isSubmittingJournal, setIsSubmittingJournal] = useState(false);
+  const queryClient = useQueryClient();
+
+  const handleJournalSubmit = async (text: string) => {
+    setIsSubmittingJournal(true);
+    try {
+      await api.journals.create({
+        journalDate: format(new Date(), "yyyy-MM-dd"),
+        entryText: text,
+        completedTasks: []
+      });
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: queryKeys.journals.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.boards.current });
+    } catch (error) {
+      console.error("Failed to submit journal", error);
+    } finally {
+      setIsSubmittingJournal(false);
+    }
+  };
 
   // --- Data Fetching --- 
   const { data: currentBoard, isLoading: boardLoading } = useQuery({
@@ -122,7 +143,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 h-[calc(100vh-140px)] min-h-[800px]">
 
           {/* LEFT COLUMN: INPUT TOOLS (3 Cols) */}
-          <div className="xl:col-span-3 flex flex-col gap-6 h-full overflow-hidden">
+          <div className="xl:col-span-3 flex flex-col gap-6 h-full overflow-y-auto custom-scrollbar no-scrollbar">
 
             {/* Daily Protocol (Tasks) */}
             <SystemPanel className="bg-[#0a0a0a] border-white/5 flex-shrink-0">
@@ -145,11 +166,14 @@ export default function DashboardPage() {
               </div>
             </SystemPanel>
 
+
+
+
             {/* Night Journal (Input) - FLEX GROW with MINIMUM HEIGHT */}
             <SystemPanel className="bg-[#0a0a0a] border-white/5 flex-grow min-h-[300px] flex flex-col">
               <NightJournalPanel
-                onSubmit={(text) => console.log(text)}
-                isLoading={false}
+                onSubmit={handleJournalSubmit}
+                isLoading={isSubmittingJournal}
               />
             </SystemPanel>
 
@@ -225,21 +249,24 @@ export default function DashboardPage() {
             {/* Hero Card Small */}
             <div className="h-48 flex-shrink-0">
               <HeroProgressCard
-                level={12}
+                level={Math.floor((currentBoard?.coloredPixels || 0) / 1000) + 1}
+                progress={((currentBoard?.coloredPixels || 0) % 1000) / 10}
                 totalJournals={journals?.length || 0}
-                totalHours={Math.round((journals?.length || 0) * 2.5)}
+                totalHours={Math.round((journals?.length || 0) * 0.5)} // avg 30 mins
                 isPro={true}
                 className="h-full border border-white/10"
               />
             </div>
 
             {/* Domain Status Grid */}
-            <SystemPanel className="bg-[#0a0a0a] border-white/5 flex-grow">
-              <LifeDomainsPanel
-                domains={domains || []}
-                domainProgress={domainProgress}
-                onDomainClick={(domain) => router.push(`/domains`)}
-              />
+            <SystemPanel className="bg-[#0a0a0a] border-white/5 max-h-[300px] flex flex-col">
+              <div className="overflow-y-auto custom-scrollbar pr-2 -mr-2">
+                <LifeDomainsPanel
+                  domains={domains || []}
+                  domainProgress={domainProgress}
+                  onDomainClick={(domain) => router.push(`/domains`)}
+                />
+              </div>
             </SystemPanel>
 
             {/* Quick Actions (Moved HERE to Right Column) */}

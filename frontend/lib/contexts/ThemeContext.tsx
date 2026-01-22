@@ -37,12 +37,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   // Prevent flash of wrong theme
-  if (!mounted) {
-    return <>{children}</>;
-  }
+  // if (!mounted) {
+  //   return <>{children}</>;
+  // }
 
+  // Always provide context to prevent useTheme from crashing
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
+      {/* Visual hiding until mounted if needed, or just render */}
+      {/* For now, just render children. Hydration mismatch for class is handled by suppressHydrationWarning in root */}
       {children}
     </ThemeContext.Provider>
   );

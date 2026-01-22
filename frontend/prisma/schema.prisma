@@ -1,0 +1,131 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String   @id @default(uuid())
+  email           String   @unique
+  username        String?  @unique // For Viral Loop
+  
+  // Profile & Settings
+  name            String?
+  visionMotto     String?  // From Onboarding Step 1
+  theme           String   @default("dark") // "dark", "light", "system"
+  timezone        String   @default("UTC")
+  
+  // Notifications
+  bedtimeReminder String   @default("22:00")
+  morningReminder String   @default("07:00")
+  emailNotify     Boolean  @default(true)
+  pushNotify      Boolean  @default(true)
+
+  createdAt       DateTime @default(now())
+  
+  // Relations
+  domains         Domain[]
+  visionBoards    VisionBoard[]
+  journals        DailyJournal[]
+  snapshots       TimelineSnapshot[]
+}
+
+model Domain {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  name          String
+  description   String?
+  colorHex      String
+  imageKeywords String[] // For AI re-generation
+  
+  images        DomainImage[]
+  goals         Goal[]
+}
+
+model DomainImage {
+  id        String   @id @default(uuid())
+  domainId  String
+  domain    Domain   @relation(fields: [domainId], references: [id])
+  url       String
+  sortOrder Int      @default(0)
+}
+
+model Goal {
+  id        String   @id @default(uuid())
+  domainId  String
+  domain    Domain   @relation(fields: [domainId], references: [id])
+  title     String
+  status    String   @default("ACTIVE") // ACTIVE, COMPLETED, ARCHIVED
+  createdAt DateTime @default(now())
+  archivedAt DateTime?
+  
+  milestones Milestone[]
+}
+
+model Milestone {
+  id        String   @id @default(uuid())
+  goalId    String
+  goal      Goal     @relation(fields: [goalId], references: [id])
+  title     String
+  isCompleted Boolean @default(false)
+}
+
+model VisionBoard {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  
+  type        String   // WEEKLY, MONTHLY, ANNUAL
+  startDate   DateTime
+  endDate     DateTime
+  
+  // Customization
+  designId    String?  // Linked to a Design System config
+  isPublic    Boolean  @default(true) // For Viral Loop
+  
+  // State
+  baseImage   String?  // The generated collage URL
+  layoutMetadata Json? // Stores regions and structure
+  pixelState  Json?    // 2D Array of 0/1
+  totalPixels Int      @default(0)
+  coloredPixels Int    @default(0)
+}
+
+model TimelineSnapshot {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  
+  date          DateTime
+  type          String   // "weekly", "monthly"
+  
+  // Visuals for JourneyMap
+  imageUrl      String?  // The board state at that time
+  animationUrl  String?  // Optional video recap
+  narrative     String?  // AI generated summary of the week
+  
+  // Stats
+  pixelCount    Int
+  completionRate Float   // 0-100
+}
+
+model DailyJournal {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  date          DateTime
+  
+  text          String
+  sentiment     String?
+  effortScore   Int?     // 1-10
+  
+  completedTasks Json?   // Array of task IDs/titles completed that day
+}

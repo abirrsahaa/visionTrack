@@ -33,12 +33,15 @@ export function SetupStep({
   }, [domainImages]);
 
   const handleComplete = () => {
+    console.log("SetupStep: handleComplete clicked");
     setIsLaunching(true);
     setTimeout(() => {
+      console.log("SetupStep: Confetti timer fired");
       setShowConfetti(true);
     }, 1200);
 
     setTimeout(() => {
+      console.log("SetupStep: Calling onComplete prop");
       onComplete();
     }, 3000);
   };

@@ -1,0 +1,465 @@
+[
+  {
+    "id": "TC001",
+    "title": "User Registration Success",
+    "description": "Verify that a new user can successfully register with valid credentials and required information.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the signup page."
+      },
+      {
+        "type": "action",
+        "description": "Input valid user information including email and password."
+      },
+      {
+        "type": "action",
+        "description": "Submit the registration form."
+      },
+      {
+        "type": "assertion",
+        "description": "Check the system confirms successful registration and sends confirmation email if applicable."
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "User Login with Valid Credentials",
+    "description": "Ensure users can log in with correct email and password and receive a valid JWT token.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the login page."
+      },
+      {
+        "type": "action",
+        "description": "Enter valid registered email and password."
+      },
+      {
+        "type": "action",
+        "description": "Submit login form."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user is authenticated and receives a JWT token for session management."
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "Login Attempt with Incorrect Credentials",
+    "description": "Verify system denies access when user enters incorrect email or password.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the login page."
+      },
+      {
+        "type": "action",
+        "description": "Enter an incorrect email or password."
+      },
+      {
+        "type": "action",
+        "description": "Click the login button."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that access is denied and an appropriate error message is shown."
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "Onboarding Flow Completion",
+    "description": "Validate that a new user can complete the multi-step onboarding process defining vision, domains with image uploads, design selection, and approving AI decomposed goals.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Start onboarding flow after login."
+      },
+      {
+        "type": "action",
+        "description": "Define multi-domain life vision and input required details."
+      },
+      {
+        "type": "action",
+        "description": "Upload domain images successfully and verify they display correctly."
+      },
+      {
+        "type": "action",
+        "description": "Select preferred vision board design style."
+      },
+      {
+        "type": "action",
+        "description": "Review AI-generated decomposed goals and approve or modify them."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm onboarding is marked complete and user dashboard is accessible."
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "Vision Board Display Accuracy",
+    "description": "Check that vision boards generate correctly in the selected design style with appropriate grayscale and colored pixel mapping per domain.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the dashboard vision board."
+      },
+      {
+        "type": "action",
+        "description": "Confirm the selected design style is correctly applied."
+      },
+      {
+        "type": "action",
+        "description": "Verify that the pixel colors accurately reflect user effort and progress status for each domain."
+      },
+      {
+        "type": "assertion",
+        "description": "Ensure grayscale pixels transition correctly to color based on user progress."
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Daily Journal Entry Submission",
+    "description": "Validate that users can submit one journal entry per day linked with task completions and that the system awards pixels accordingly.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Access the journal panel on the dashboard at bedtime reminder."
+      },
+      {
+        "type": "action",
+        "description": "Enter daily reflections and mark completed tasks."
+      },
+      {
+        "type": "action",
+        "description": "Submit the journal entry."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm that journal entry is accepted, tasks are recorded, and pixel progress is updated appropriately."
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "Single Daily Journal Restriction",
+    "description": "Verify that users cannot submit multiple journal entries for the same day.",
+    "category": "error handling",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Submit a journal entry for the current day."
+      },
+      {
+        "type": "action",
+        "description": "Attempt to submit a second journal entry for the same day."
+      },
+      {
+        "type": "assertion",
+        "description": "Check system rejects with an informative message preventing duplicate journal entries."
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "AI Reflection Emotional and Energy Analysis",
+    "description": "Verify that AI successfully analyzes journal reflections to extract emotional state and energy levels and updates pixel and task statuses accordingly.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Submit a journal entry with rich reflections."
+      },
+      {
+        "type": "assertion",
+        "description": "Check AI reflection analysis interprets emotional and energy signals from entry."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify corresponding updates to pixel colors and next day's tasks are generated reflecting AI insights."
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Morning Task Presentation and Modification",
+    "description": "Ensure morning tasks generated by AI are displayed properly, can be approved, adjusted, or skipped by the user.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Receive morning reminder notification with task list."
+      },
+      {
+        "type": "action",
+        "description": "View tasks on the dashboard."
+      },
+      {
+        "type": "action",
+        "description": "Modify tasks by approving, adjusting details, or skipping."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm task status updates reflect user actions accurately in the system."
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "Goal Mutation Without Data Loss",
+    "description": "Validate that when users change goals, the system archives old goals, locks pixel progress, creates new goals, and preserves historical context with transition narratives.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to goal management section."
+      },
+      {
+        "type": "action",
+        "description": "Initiate goal mutation/change process."
+      },
+      {
+        "type": "action",
+        "description": "Confirm archiving and locking of old goal progress."
+      },
+      {
+        "type": "action",
+        "description": "Set up new goals and verify system generates transition narrative."
+      },
+      {
+        "type": "assertion",
+        "description": "Ensure no data loss occurs and visual continuity is maintained on vision board."
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "Weekly Wrap Animation Generation",
+    "description": "Check that weekly wraps are generated automatically with narrative summaries and smooth pixel progression animations reflecting the user activity.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Trigger or schedule weekly wrap generation after 7 days of activities."
+      },
+      {
+        "type": "assertion",
+        "description": "Validate the presence of AI-generated narrative summary matching user journals."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify smooth animated progression of pixels corresponding to weekly effort."
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "Reminder Notifications Delivery",
+    "description": "Ensure bedtime journal and morning task validation reminders send as scheduled without duplicates, respecting user-configured times and timezones.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Configure reminder times in user settings."
+      },
+      {
+        "type": "assertion",
+        "description": "Check system sends push notification alerts at the configured times."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm no duplicate notifications are sent within the same day."
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "Wallpaper Export Generation",
+    "description": "Verify users can export their vision boards as wallpapers in specified mobile and desktop resolutions with valid download URLs.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Request wallpaper export from the vision board UI."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm export generates correct wallpaper file in mobile and desktop resolution formats."
+      },
+      {
+        "type": "assertion",
+        "description": "Validate the download URL for the exported wallpaper is valid and accessible."
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "Video Export and Share Link Generation",
+    "description": "Ensure journey video exports are generated correctly with smooth animations and that shareable links are valid and accessible.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Initiate journey video export from timeline or weekly wrap view."
+      },
+      {
+        "type": "assertion",
+        "description": "Validate video file is generated with expected animation quality matching user activity."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify generated shareable link is functional and provides access to the video."
+      }
+    ]
+  },
+  {
+    "id": "TC015",
+    "title": "Dashboard Responsive Layout Rendering",
+    "description": "Check that dashboard components render consistently and adapt responsively across multiple device screen sizes with smooth animations.",
+    "category": "ui",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Access dashboard pages on desktop, tablet, and mobile devices."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm UI components layout correctly and maintain usability on all tested screen sizes."
+      },
+      {
+        "type": "assertion",
+        "description": "Ensure animations are smooth and do not cause layout shifts or jank."
+      }
+    ]
+  },
+  {
+    "id": "TC016",
+    "title": "Backend API Authorization and Error Handling",
+    "description": "Validate backend APIs require proper authentication, respond correctly to authorized requests, and handle errors gracefully with meaningful messages.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Send API requests with valid JWT tokens."
+      },
+      {
+        "type": "assertion",
+        "description": "Check API returns expected data with HTTP 200 status."
+      },
+      {
+        "type": "action",
+        "description": "Send API requests with missing or invalid tokens."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify API rejects requests with HTTP 401 Unauthorized."
+      },
+      {
+        "type": "action",
+        "description": "Send malformed API requests with invalid parameters."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm API returns proper error codes and messages without exposing sensitive data."
+      }
+    ]
+  },
+  {
+    "id": "TC017",
+    "title": "AI Response Validation and Fallback Handling",
+    "description": "Ensure AI integrations respond according to expected schemas and that fallback mechanisms activate reliably when AI services fail or return unexpected data.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Invoke AI-driven features such as goal decomposition, reflection interpretation, and story generation."
+      },
+      {
+        "type": "assertion",
+        "description": "Check AI responses comply with predefined schemas and data formats."
+      },
+      {
+        "type": "action",
+        "description": "Simulate AI service failures or timeouts."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify fallback logic triggers and user receives appropriate messaging or alternative results."
+      }
+    ]
+  },
+  {
+    "id": "TC018",
+    "title": "Image Upload Security and Access Control",
+    "description": "Validate domain image uploads are securely handled with proper access controls and use of signed URLs for storage and retrieval.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Upload an image file during domain setup."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm image is stored securely with appropriate metadata in S3-compatible storage."
+      },
+      {
+        "type": "action",
+        "description": "Attempt unauthorized access to uploaded image URL."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify access is denied without valid signed URL or authorization."
+      }
+    ]
+  },
+  {
+    "id": "TC019",
+    "title": "Background Job Execution for Scheduled Tasks",
+    "description": "Ensure background jobs execute reliably for reminders, vision board pixel progressions, pixel spillover handling, and timeline stitching tasks.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Trigger scheduled background jobs manually or via cron simulation."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify each job completes successfully and updates the system state accordingly."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm jobs handle failures gracefully and retry as configured."
+      }
+    ]
+  }
+]

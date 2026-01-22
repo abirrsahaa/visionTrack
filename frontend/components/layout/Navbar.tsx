@@ -1,10 +1,10 @@
 "use client";
 
+import { useClerk } from "@clerk/nextjs";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { LayoutGrid, Map, Database, Settings, LogOut } from "lucide-react";
-import { useAuthStore } from "@/lib/stores";
 import { useTheme } from "@/lib/contexts/ThemeContext";
 import { cn } from "@/lib/utils/cn";
 import { Logo } from "@/components/shared/Logo";
@@ -13,14 +13,15 @@ import { useScrollDirection } from "@/lib/hooks/useScrollDirection";
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { logout, user } = useAuthStore();
+  const { signOut } = useClerk();
   const { theme, toggleTheme } = useTheme();
   const scrollDirection = useScrollDirection();
 
   const handleLogout = () => {
-    logout();
-    router.push("/login");
+    signOut(() => router.push("/sign-in"));
   };
+
+  // ... existing code ...
 
   const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutGrid },

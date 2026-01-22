@@ -12,7 +12,7 @@ import Link from "next/link";
 import { generateWeeklyBoards } from "@/lib/utils/mockData6Months";
 
 export default function CheckpointsPage() {
-  const [selectedWeek, setSelectedWeek] = useState(26); // Current week (26)
+  const [selectedWeek, setSelectedWeek] = useState(1); // Default 1
 
   // Fetch domains
   const { data: domains } = useQuery({
@@ -79,9 +79,9 @@ export default function CheckpointsPage() {
               {/* Checkpoint Board Preview */}
               <div className="relative aspect-video bg-gray-100">
                 {checkpoint.board && domains && domains.length > 0 ? (
-                  <VisionBoard 
-                    board={checkpoint.board} 
-                    domains={domains} 
+                  <VisionBoard
+                    board={checkpoint.board}
+                    domains={domains}
                     pixelSize={14}
                   />
                 ) : (
@@ -106,7 +106,7 @@ export default function CheckpointsPage() {
                 <div className="flex items-center gap-2 mb-2">
                   <Calendar className="h-4 w-4 text-gray-400" />
                   <p className="text-sm text-gray-600">
-                    {checkpoint.snapshot 
+                    {checkpoint.snapshot
                       ? format(parseISO(checkpoint.snapshot.snapshotDate), "MMM d, yyyy")
                       : `Week ${checkpoint.week}`}
                   </p>
@@ -132,7 +132,7 @@ export default function CheckpointsPage() {
           <h2 className="text-2xl font-bold mb-4">
             Week {selectedWeek} - Detailed View
           </h2>
-          
+
           {(() => {
             const checkpoint = checkpoints.find((cp) => cp.week === selectedWeek);
             if (!checkpoint || !checkpoint.board || !domains) return null;
@@ -142,9 +142,9 @@ export default function CheckpointsPage() {
                 {/* Full Pixelated Board */}
                 <div>
                   <h3 className="text-lg font-semibold mb-3">Vision Board Progress</h3>
-                  <VisionBoard 
-                    board={checkpoint.board} 
-                    domains={domains} 
+                  <VisionBoard
+                    board={checkpoint.board}
+                    domains={domains}
                     pixelSize={8}
                   />
                 </div>

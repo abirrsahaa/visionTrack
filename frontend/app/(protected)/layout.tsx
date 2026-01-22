@@ -1,52 +1,40 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/lib/stores";
+import { currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import { Navbar } from "@/components/layout/Navbar";
+import { prisma } from "@/lib/prisma";
 
-export default function ProtectedLayout({
+export default async function ProtectedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const { isAuthenticated, user } = useAuthStore();
-  const [isChecking, setIsChecking] = useState(true);
+  const user = await currentUser();
 
-  useEffect(() => {
-    const checkAuth = () => {
-      const hasAuth = isAuthenticated || user !== null;
-      
-      const hasToken = typeof window !== "undefined" && 
-                      (localStorage.getItem("accessToken") || 
-                       document.cookie.includes("accessToken"));
-
-      if (!hasAuth && !hasToken) {
-        router.push("/login");
-        return;
-      }
-
-      setIsChecking(false);
-    };
-
-    const timer = setTimeout(checkAuth, 100);
-    return () => clearTimeout(timer);
-  }, [isAuthenticated, user, router]);
-
-  if (isChecking) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-purple border-r-transparent"></div>
-          <p className="mt-4 text-foreground-tertiary">Loading...</p>
-        </div>
-      </div>
-    );
+  if (!user) {
+    redirect("/sign-in");
   }
 
-  if (!isAuthenticated && !user) {
-    return null;
+  // 1. Fast Check: Clerk Metadata
+  const onboardingCompleted = user.publicMetadata?.onboardingCompleted;
+
+  if (!onboardingCompleted) {
+    // 2. Deep Check: Database Source of Truth
+    // This handles the race condition where Clerk metadata hasn't propagated yet
+    // but the DB write in server action was successful.
+    const userEmail = user.emailAddresses[0]?.emailAddress;
+    if (userEmail) {
+      const dbUser = await prisma.user.findUnique({
+        where: { email: userEmail },
+        select: { id: true }
+      });
+
+      if (!dbUser) {
+        redirect("/onboarding");
+      }
+      // If dbUser exists, they are onboarded. Allow access.
+    } else {
+      redirect("/onboarding");
+    }
   }
 
   return (

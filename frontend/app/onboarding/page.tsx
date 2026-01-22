@@ -10,6 +10,7 @@ import { DesignSelectorStep } from "@/components/onboarding/DesignSelectorStep";
 import { GoalReviewStep } from "@/components/onboarding/GoalReviewStep";
 import { SetupStep } from "@/components/onboarding/SetupStep";
 import { extractDomainsFromVision } from "@/app/functions/extraction";
+import { syncOnboardingData } from "@/app/actions";
 
 const TOTAL_STEPS = 6;
 
@@ -28,8 +29,11 @@ interface Goal {
   todos: string[];
 }
 
+import { useUser } from "@clerk/nextjs";
+
 export default function OnboardingPage() {
   const router = useRouter();
+  const { user } = useUser();
   const [currentStep, setCurrentStep] = useState(0);
   const [visionText, setVisionText] = useState("");
 
@@ -167,6 +171,7 @@ export default function OnboardingPage() {
   })();
 
   const handleOnboardingComplete = () => {
+    console.log("OnboardingPage: handleOnboardingComplete started");
     // Persist data
     const userData = {
       vision: visionText,
@@ -184,11 +189,29 @@ export default function OnboardingPage() {
 
     localStorage.setItem("vision-board-data", JSON.stringify(userData));
 
-    // Clear drafts
-    localStorage.removeItem("onboarding-current-step");
-    localStorage.removeItem("onboarding-vision-draft");
+    // Server Sync
+    // We'll wrap this in a transition or async call
+    (async () => {
+      try {
+        const result = await syncOnboardingData(userData);
+        if (result.success) {
+          // Clear drafts
+          localStorage.removeItem("onboarding-current-step");
+          localStorage.removeItem("onboarding-vision-draft");
 
-    router.push("/dashboard");
+          // Force token refresh to get updated metadata
+          await user?.reload();
+
+          router.push("/dashboard");
+        } else {
+          console.error("Sync error:", result.error);
+          router.push("/dashboard");
+        }
+      } catch (e) {
+        console.error("Sync exception:", e);
+        router.push("/dashboard");
+      }
+    })();
   };
 
   const handleNext = () => {

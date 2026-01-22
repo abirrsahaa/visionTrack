@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { VisionBoard as VisionBoardType, Domain } from "@/lib/types";
 import { PixelatedBoard } from "./PixelatedBoard";
 
@@ -41,10 +42,12 @@ export function VisionBoard({ board, domains = [], pixelSize = 8 }: VisionBoardP
     <div className="space-y-4">
       {/* Board Display */}
       <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden">
-        <img
+        <Image
           src={board.currentImageUrl || board.baseImageUrl}
           alt="Vision Board"
-          className="w-full h-full object-cover"
+          fill
+          sizes="(max-width: 768px) 100vw, 80vw"
+          className="object-cover"
         />
 
         {/* Progress Overlay */}

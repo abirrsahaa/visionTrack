@@ -1,124 +1,150 @@
-"use client";
-
-import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check } from "lucide-react";
+import { Check, LayoutGrid, LayoutTemplate, Layers } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface DesignSelectorStepProps {
   selectedDesign: string | null;
   onDesignSelect: (designId: string) => void;
+  images?: string[]; // New prop for live preview
 }
 
 const designs = [
-  { id: "grid", name: "Grid", description: "Balanced, structured layout" },
-  { id: "collage", name: "Collage", description: "Organic, overlapping arrangement" },
-  { id: "cinematic", name: "Cinematic", description: "Wide aspect, dramatic focus" },
-  { id: "minimalist", name: "Minimalist", description: "Clean lines, lots of space" },
-  { id: "symmetric", name: "Symmetric", description: "Mirror-perfect balance" },
+  {
+    id: "masonry",
+    name: "Pinterest Masonry",
+    description: "Organic, flowing layout that respects aspect ratios.",
+    icon: LayoutTemplate
+  },
+  {
+    id: "grid",
+    name: "Structured Grid",
+    description: "Clean, uniform rows and columns for maximum order.",
+    icon: LayoutGrid
+  },
+  {
+    id: "collage",
+    name: "Chaos Collage",
+    description: "Overlapping, artistic arrangement for maximum vibe.",
+    icon: Layers
+  },
 ];
 
 export function DesignSelectorStep({
   selectedDesign,
   onDesignSelect,
+  images = [],
 }: DesignSelectorStepProps) {
-  return (
-    <div className="max-w-5xl mx-auto space-y-8">
-      <div className="text-center">
-        <h2 className="text-3xl font-bold text-gray-900 mb-3">
-          Choose Your Board Design
-        </h2>
-        <p className="text-gray-600">
-          Select a design style that resonates with you. You can change this later.
-        </p>
-      </div>
+  // Flatten images for preview (limit to 6 for performance)
+  const previewImages = images.slice(0, 6);
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  return (
+    <div className="max-w-6xl mx-auto space-y-12 min-h-[60vh] flex flex-col justify-center">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center"
+      >
+        <span className="inline-block px-3 py-1 mb-4 text-xs font-mono text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-full">
+          PHASE 3: ARCHITECTURE
+        </span>
+        <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
+          Choose Your Structure
+        </h2>
+        <p className="text-gray-400 max-w-xl mx-auto text-lg">
+          How should your future look? Select the framework that fits your mental model.
+        </p>
+      </motion.div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {designs.map((design, index) => {
           const isSelected = selectedDesign === design.id;
+          const Icon = design.icon;
+
           return (
             <motion.button
               key={design.id}
               onClick={() => onDesignSelect(design.id)}
-              className={`relative aspect-video rounded-xl overflow-hidden border-2 transition-all ${
+              className={cn(
+                "group relative aspect-[3/4] rounded-2xl overflow-hidden border-2 transition-all duration-500 flex flex-col items-start text-left",
                 isSelected
-                  ? "border-blue-600 ring-4 ring-blue-200 shadow-2xl"
-                  : "border-gray-300 hover:border-blue-400 shadow-lg"
-              }`}
+                  ? "border-purple-500 bg-black/80 shadow-[0_0_50px_rgba(168,85,247,0.3)]"
+                  : "border-white/10 bg-black/40 hover:border-white/30 hover:bg-black/60"
+              )}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ scale: 1.05, y: -5 }}
+              transition={{ delay: index * 0.15 }}
+              whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              {/* Mock Preview */}
-              <div
-                className={`w-full h-full ${
-                  design.id === "grid"
-                    ? "bg-gradient-to-br from-blue-400 to-purple-500"
-                    : design.id === "collage"
-                    ? "bg-gradient-to-tr from-pink-400 to-orange-500"
-                    : design.id === "cinematic"
-                    ? "bg-gradient-to-r from-indigo-500 to-purple-600"
-                    : design.id === "minimalist"
-                    ? "bg-gradient-to-br from-gray-200 to-gray-400"
-                    : "bg-gradient-to-bl from-yellow-400 to-pink-500"
-                }`}
-              >
-                {/* Pattern overlay based on design type */}
-                {design.id === "grid" && (
-                  <div
-                    className="w-full h-full opacity-30"
-                    style={{
-                      backgroundImage: `
-                        linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px)
-                      `,
-                      backgroundSize: "20px 20px",
-                    }}
-                  />
+              {/* Live Preview Area */}
+              <div className="w-full flex-1 relative overflow-hidden p-4">
+                {/* GRID PREVIEW */}
+                {design.id === 'grid' && (
+                  <div className="grid grid-cols-2 gap-2 w-full h-full content-start opacity-70 group-hover:opacity-100 transition-opacity">
+                    {previewImages.map((src, i) => (
+                      <img key={i} src={src} className="w-full h-24 object-cover rounded-md" alt="" />
+                    ))}
+                  </div>
                 )}
-                {design.id === "collage" && (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <div className="w-24 h-24 bg-white/30 rounded-full transform rotate-45" />
-                    <div className="w-16 h-16 bg-white/20 rounded-lg absolute top-4 left-4" />
-                    <div className="w-20 h-20 bg-white/25 rounded-full absolute bottom-4 right-4" />
+
+                {/* MASONRY PREVIEW (Simulated with columns) */}
+                {design.id === 'masonry' && (
+                  <div className="columns-2 gap-2 w-full h-full opacity-70 group-hover:opacity-100 transition-opacity">
+                    {previewImages.map((src, i) => (
+                      <img key={i} src={src} className="w-full mb-2 object-cover rounded-md" style={{ height: i % 2 === 0 ? '120px' : '80px' }} alt="" />
+                    ))}
+                  </div>
+                )}
+
+                {/* COLLAGE PREVIEW */}
+                {design.id === 'collage' && (
+                  <div className="relative w-full h-full opacity-70 group-hover:opacity-100 transition-opacity">
+                    {previewImages.map((src, i) => (
+                      <img
+                        key={i}
+                        src={src}
+                        className="absolute w-24 h-24 object-cover rounded-lg shadow-lg border-2 border-white/10"
+                        style={{
+                          top: `${(i * 15) % 80}%`,
+                          left: `${(i * 20) % 70}%`,
+                          transform: `rotate(${i % 2 === 0 ? 6 : -6}deg)`,
+                          zIndex: i
+                        }}
+                        alt=""
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Fallback if no images */}
+                {previewImages.length === 0 && (
+                  <div className="w-full h-full flex items-center justify-center text-white/20">
+                    <Icon size={48} />
                   </div>
                 )}
               </div>
 
-              {/* Selection Indicator */}
-              {isSelected && (
-                <motion.div
-                  className="absolute top-3 right-3 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-lg"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                >
-                  <Check className="w-5 h-5" />
-                </motion.div>
-              )}
-
-              {/* Design Info Overlay */}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4 text-white">
-                <h3 className="font-bold text-lg mb-1">{design.name}</h3>
-                <p className="text-sm text-white/90">{design.description}</p>
+              {/* Label Area */}
+              <div className="w-full p-6 bg-gradient-to-t from-black via-black/90 to-transparent pt-12 z-10">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2 text-white font-bold text-xl">
+                    <Icon size={20} className={isSelected ? "text-purple-400" : "text-gray-500"} />
+                    {design.name}
+                  </div>
+                  {isSelected && (
+                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="bg-purple-500 rounded-full p-1">
+                      <Check size={12} className="text-white" />
+                    </motion.div>
+                  )}
+                </div>
+                <p className="text-sm text-gray-400 leading-relaxed">
+                  {design.description}
+                </p>
               </div>
             </motion.button>
           );
         })}
       </div>
-
-      {selectedDesign && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200"
-        >
-          <p className="text-sm text-blue-700">
-            Selected: <span className="font-semibold">{designs.find((d) => d.id === selectedDesign)?.name}</span>
-          </p>
-        </motion.div>
-      )}
     </div>
   );
 }

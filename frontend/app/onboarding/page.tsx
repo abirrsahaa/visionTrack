@@ -9,8 +9,18 @@ import { DomainImageStep } from "@/components/onboarding/DomainImageStep";
 import { DesignSelectorStep } from "@/components/onboarding/DesignSelectorStep";
 import { GoalReviewStep } from "@/components/onboarding/GoalReviewStep";
 import { SetupStep } from "@/components/onboarding/SetupStep";
+import { extractDomainsFromVision } from "@/app/functions/extraction";
 
 const TOTAL_STEPS = 6;
+
+// Enhanced Domain Type from AI
+interface ExtractedDomain {
+  name: string;
+  description: string;
+  suggestedGoal: string;
+  colorHex: string;
+  imageKeywords: string[];
+}
 
 interface Goal {
   domain: string;
@@ -22,8 +32,11 @@ export default function OnboardingPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
   const [visionText, setVisionText] = useState("");
-  const [extractedDomains, setExtractedDomains] = useState<string[]>([]);
+
+  // State for AI Results
+  const [extractedDomains, setExtractedDomains] = useState<ExtractedDomain[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+
   const [currentDomainIndex, setCurrentDomainIndex] = useState(0);
   const [domainImages, setDomainImages] = useState<Record<string, string[]>>({});
   const [selectedDesign, setSelectedDesign] = useState<string | null>(null);
@@ -35,44 +48,65 @@ export default function OnboardingPage() {
   useEffect(() => {
     const savedStep = localStorage.getItem("onboarding-current-step");
     const savedVision = localStorage.getItem("onboarding-vision-draft");
-    
+    const savedDomains = localStorage.getItem("onboarding-domains");
+    const savedImages = localStorage.getItem("onboarding-images");
+    const savedGoals = localStorage.getItem("onboarding-goals");
+
     if (savedStep) {
-      setCurrentStep(parseInt(savedStep, 10));
+      const step = parseInt(savedStep, 10);
+      // Safety Check: If trying to access steps 2+ without domains, force back to vision step
+      if (step >= 2 && (!savedDomains || JSON.parse(savedDomains).length === 0)) {
+        setCurrentStep(1);
+      } else {
+        setCurrentStep(step);
+      }
     }
-    if (savedVision) {
-      setVisionText(savedVision);
-    }
+    if (savedVision) setVisionText(savedVision);
+    if (savedDomains) setExtractedDomains(JSON.parse(savedDomains));
+    if (savedImages) setDomainImages(JSON.parse(savedImages));
+    if (savedGoals) setGoals(JSON.parse(savedGoals));
   }, []);
 
-  // Initialize goals when domains are extracted
+  // Save state on changes
+  useEffect(() => {
+    if (extractedDomains.length > 0) {
+      localStorage.setItem("onboarding-domains", JSON.stringify(extractedDomains));
+    }
+  }, [extractedDomains]);
+
+  useEffect(() => {
+    localStorage.setItem("onboarding-images", JSON.stringify(domainImages));
+  }, [domainImages]);
+
+  useEffect(() => {
+    if (goals.length > 0) {
+      localStorage.setItem("onboarding-goals", JSON.stringify(goals));
+    }
+  }, [goals]);
+
+  // Initialize goals when domains are extracted (only if no saved goals)
   useEffect(() => {
     if (extractedDomains.length > 0 && goals.length === 0) {
       const initialGoals: Goal[] = extractedDomains.map((domain) => ({
-        domain,
+        domain: domain.name,
         milestones: [
-          `Q1: Establish foundation for ${domain}`,
-          `Q2: Build momentum in ${domain}`,
-          `Q3: Achieve key milestones in ${domain}`,
-          `Q4: Reflect and plan next year for ${domain}`,
+          `Q1: Foundation - ${domain.suggestedGoal.split(" ").slice(0, 4).join(" ")}...`,
+          "Q2: Build Consistency & Systems",
+          "Q3: Achieve Breakthrough Results",
+          "Q4: Mastery & Review",
         ],
         todos: [
-          `Week 1: Research and plan ${domain} strategy`,
-          `Week 2: Take first action steps`,
-          `Week 3: Measure progress and adjust`,
-          `Week 4: Review and set next month goals`,
+          `Week 1: Assess current state of ${domain.name}`,
+          "Week 2: Define specific success metrics",
+          "Week 3: Execute first major action item",
+          "Week 4: Review progress and adjust plan",
         ],
       }));
       setGoals(initialGoals);
     }
   }, [extractedDomains, goals.length]);
 
-  const handleNext = () => {
-    if (currentStep < TOTAL_STEPS - 1) {
-      const nextStep = currentStep + 1;
-      setCurrentStep(nextStep);
-      localStorage.setItem("onboarding-current-step", nextStep.toString());
-    }
-  };
+
 
   const handlePrevious = () => {
     if (currentStep > 0) {
@@ -82,14 +116,23 @@ export default function OnboardingPage() {
     }
   };
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
     setIsAnalyzing(true);
-    // Simulate AI extraction
-    setTimeout(() => {
-      const mockDomains = ["Career & Growth", "Health", "Mindfulness", "Financial Freedom"];
-      setExtractedDomains(mockDomains);
+
+    try {
+      const result = await extractDomainsFromVision(visionText);
+
+      if (result.success && result.data) {
+        setExtractedDomains(result.data);
+      } else {
+        // Fallback or Error Toast here
+        console.error("Failed to extract domains");
+      }
+    } catch (error) {
+      console.error("Analysis failed", error);
+    } finally {
       setIsAnalyzing(false);
-    }, 2000);
+    }
   };
 
   const handleDomainImagesChange = (domain: string, images: string[]) => {
@@ -111,18 +154,52 @@ export default function OnboardingPage() {
       case 1:
         return visionText.trim().length > 0;
       case 2:
-        // Check if at least one domain has images
-        return extractedDomains.some((domain) => (domainImages[domain]?.length || 0) > 0);
+        return extractedDomains.some((d) => (domainImages[d.name]?.length || 0) > 0);
       case 3:
         return selectedDesign !== null;
       case 4:
         return goals.length > 0;
       case 5:
-        return true; // Setup step always allowed
+        return true;
       default:
         return true;
     }
   })();
+
+  const handleOnboardingComplete = () => {
+    // Persist data
+    const userData = {
+      vision: visionText,
+      domains: extractedDomains,
+      domainImages,
+      // Pass the design name/id 
+      design: selectedDesign,
+      goals,
+      reminders: {
+        bedtime: bedtimeReminder,
+        morning: morningReminder
+      },
+      createdAt: new Date().toISOString()
+    };
+
+    localStorage.setItem("vision-board-data", JSON.stringify(userData));
+
+    // Clear drafts
+    localStorage.removeItem("onboarding-current-step");
+    localStorage.removeItem("onboarding-vision-draft");
+
+    router.push("/dashboard");
+  };
+
+  const handleNext = () => {
+    if (currentStep === TOTAL_STEPS - 1) {
+      handleOnboardingComplete();
+    } else {
+      const nextStep = currentStep + 1;
+      setCurrentStep(nextStep);
+      localStorage.setItem("onboarding-current-step", nextStep.toString());
+    }
+  };
 
   return (
     <OnboardingStepWrapper
@@ -138,7 +215,8 @@ export default function OnboardingPage() {
         <VisionStep
           visionText={visionText}
           onVisionChange={setVisionText}
-          extractedDomains={extractedDomains}
+          // Pass just the names to VisionStep for compatibility, or update VisionStep to accept objects
+          extractedDomains={extractedDomains.map(d => d.name)}
           onAnalyze={handleAnalyze}
           isAnalyzing={isAnalyzing}
         />
@@ -156,6 +234,7 @@ export default function OnboardingPage() {
         <DesignSelectorStep
           selectedDesign={selectedDesign}
           onDesignSelect={setSelectedDesign}
+          images={Object.values(domainImages).flat()}
         />
       )}
       {currentStep === 4 && (
@@ -169,8 +248,11 @@ export default function OnboardingPage() {
           bedtimeReminder={bedtimeReminder}
           morningReminder={morningReminder}
           onRemindersChange={handleRemindersChange}
+          onComplete={handleOnboardingComplete}
+          domainImages={domainImages}
         />
       )}
     </OnboardingStepWrapper>
   );
 }
+

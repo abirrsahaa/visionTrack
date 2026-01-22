@@ -1,12 +1,20 @@
-"use client";
-
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Upload, X, Image as ImageIcon, Sparkles } from "lucide-react";
+import { Upload, X, Plus, Sparkles, RefreshCw, Search, Layers, Image as ImageIcon, Trash2 } from "lucide-react";
 import { SystemButton } from "@/components/shared/SystemButton";
+import { cn } from "@/lib/utils";
+import { imagesApi } from "@/lib/api/images";
+
+interface ExtractedDomain {
+  name: string;
+  description: string;
+  suggestedGoal: string;
+  colorHex: string;
+  imageKeywords: string[];
+}
 
 interface DomainImageStepProps {
-  domains: string[];
+  domains: ExtractedDomain[];
   domainImages: Record<string, string[]>;
   onDomainImagesChange: (domain: string, images: string[]) => void;
   currentDomainIndex: number;
@@ -21,8 +29,60 @@ export function DomainImageStep({
   onDomainChange,
 }: DomainImageStepProps) {
   const [dragging, setDragging] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // State for search results
+  const [searchResults, setSearchResults] = useState<string[]>([]);
+
   const currentDomain = domains[currentDomainIndex];
-  const images = domainImages[currentDomain] || [];
+  // Calculate total images across all domains
+  const totalImages = Object.values(domainImages).reduce((acc, curr) => acc + curr.length, 0);
+
+  // Auto-Search on Domain Change (Populates Left Panel, NOT Right Panel)
+  useEffect(() => {
+    if (!currentDomain) return; // Safeguard
+
+    const fetchSuggestions = async () => {
+      // Only fetch if we don't have results for this domain yet to save API calls
+      // For simplicity in this demo, we just check if it's empty. In prod, cache this.
+      if (!isSearching) {
+        setIsSearching(true);
+        try {
+          const query = currentDomain.imageKeywords?.join(" ") || currentDomain.name + " aesthetic";
+          const foundImages = await imagesApi.search(query);
+          if (foundImages.length > 0) {
+            setSearchResults(foundImages);
+          }
+        } catch (e) {
+          console.error("Auto-search failed", e);
+        } finally {
+          setIsSearching(false);
+        }
+      }
+    };
+
+    fetchSuggestions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentDomain?.name]);
+
+  // Safeguard
+  if (!currentDomain) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-gray-400">
+        <RefreshCw className="w-8 h-8 text-neon-cyan animate-spin mb-4" />
+        <p className="font-mono text-neon-cyan/70 tracking-widest animate-pulse">SYSTEM SYNCHRONIZATION...</p>
+      </div>
+    );
+  }
+
+  const handleSelectImage = (url: string) => {
+    const currentImages = domainImages[currentDomain.name] || [];
+    // duplicate check
+    if (currentImages.includes(url)) return;
+
+    onDomainImagesChange(currentDomain.name, [...currentImages, url]);
+  };
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -33,10 +93,11 @@ export function DomainImageStep({
       );
       if (files.length > 0) {
         const fileUrls = files.map((file) => URL.createObjectURL(file));
-        onDomainImagesChange(currentDomain, [...images, ...fileUrls]);
+        const currentImages = domainImages[currentDomain.name] || [];
+        onDomainImagesChange(currentDomain.name, [...currentImages, ...fileUrls]);
       }
     },
-    [currentDomain, images, onDomainImagesChange]
+    [currentDomain, domainImages, onDomainImagesChange]
   );
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,165 +106,184 @@ export function DomainImageStep({
     );
     if (files.length > 0) {
       const fileUrls = files.map((file) => URL.createObjectURL(file));
-      onDomainImagesChange(currentDomain, [...images, ...fileUrls]);
+      const currentImages = domainImages[currentDomain.name] || [];
+      onDomainImagesChange(currentDomain.name, [...currentImages, ...fileUrls]);
     }
   };
 
-  const removeImage = (index: number) => {
-    const newImages = images.filter((_, i) => i !== index);
-    onDomainImagesChange(currentDomain, newImages);
-  };
-
-  const addAISuggestion = () => {
-    // Mock AI suggestion - in real app would call API
-    const mockImages = [
-      "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400",
-      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400",
-    ];
-    onDomainImagesChange(currentDomain, [...images, ...mockImages.slice(0, 5 - images.length)]);
+  const removeImage = (domainName: string, imageIndex: number) => {
+    const currentImages = domainImages[domainName] || [];
+    const newImages = currentImages.filter((_, i) => i !== imageIndex);
+    onDomainImagesChange(domainName, newImages);
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <div className="text-center">
-        <h2 className="text-3xl font-bold text-gray-900 mb-3">
-          Add Images for {currentDomain}
-        </h2>
-        <p className="text-gray-600">
-          Upload 1-5 inspirational images that represent your completed vision for this domain.
-        </p>
-      </div>
+    <div className="max-w-[1700px] mx-auto min-h-[70vh] flex flex-col lg:flex-row gap-8">
 
-      {/* Domain Navigation */}
-      <div className="flex justify-center gap-2">
-        {domains.map((domain, index) => (
-          <motion.button
-            key={domain}
-            onClick={() => onDomainChange(index)}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              index === currentDomainIndex
-                ? "bg-blue-600 text-white shadow-lg"
-                : "bg-white text-gray-600 border border-gray-300 hover:border-blue-400"
-            }`}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {domain}
-            {(domainImages[domain]?.length || 0) > 0 && (
-              <span className="ml-2 text-xs">({domainImages[domain]?.length})</span>
-            )}
-          </motion.button>
-        ))}
-      </div>
-
-      {/* Progress */}
-      <div className="text-center">
-        <p className="text-sm text-gray-600">
-          {domains.filter((d) => (domainImages[d]?.length || 0) > 0).length} of {domains.length}{" "}
-          domains completed
-        </p>
-      </div>
-
-      {/* Image Upload Area */}
-      <div
-        onDrop={handleDrop}
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDragging(true);
-        }}
-        onDragLeave={() => setDragging(false)}
-        className={`relative border-2 border-dashed rounded-xl p-12 transition-all ${
-          dragging
-            ? "border-blue-500 bg-blue-50"
-            : "border-gray-300 bg-gray-50 hover:border-gray-400"
-        }`}
-      >
-        {images.length === 0 ? (
-          <div className="text-center">
-            <Upload className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 mb-2">
-              Drag and drop images here, or click to browse
-            </p>
-            <p className="text-sm text-gray-500 mb-4">
-              Supported formats: JPG, PNG, WebP (max 5 images)
-            </p>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleFileInput}
-              className="hidden"
-              id="image-upload"
-            />
-            <SystemButton
-              onClick={() => document.getElementById("image-upload")?.click()}
-              variant="outline"
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              Browse Files
-            </SystemButton>
-            <div className="mt-4">
-              <SystemButton
-                onClick={addAISuggestion}
-                variant="outline"
-                className="flex items-center gap-2 mx-auto"
-              >
-                <Sparkles className="w-4 h-4" />
-                Get AI Suggestions
-              </SystemButton>
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <AnimatePresence>
-              {images.map((url, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="relative aspect-square rounded-lg overflow-hidden group border-2 border-gray-200"
+      {/* LEFT PANEL: ASSET DISCOVERY (SEARCH & SELECT) */}
+      <div className="lg:w-1/3 space-y-6 flex flex-col">
+        {/* Domain Selector */}
+        <div className="glass-panel p-6 rounded-2xl relative overflow-hidden flex-shrink-0">
+          <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+            <Layers className="w-4 h-4 text-neon-purple" />
+            Active Frequency
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {domains.map((domain, index) => {
+              const isActive = index === currentDomainIndex;
+              return (
+                <button
+                  key={domain.name}
+                  onClick={() => onDomainChange(index)}
+                  className={cn(
+                    "px-4 py-2 rounded-lg text-xs font-mono transition-all duration-300 border flex items-center gap-2",
+                    isActive
+                      ? "bg-neon-cyan/10 text-neon-cyan border-neon-cyan/50 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+                      : "bg-black/40 text-gray-500 border-white/5 hover:border-white/20 hover:text-gray-300"
+                  )}
                 >
-                  <img
-                    src={url}
-                    alt={`${currentDomain} image ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                  <motion.button
-                    onClick={() => removeImage(index)}
-                    className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <X className="w-4 h-4" />
-                  </motion.button>
-                </motion.div>
-              ))}
-            </AnimatePresence>
+                  <div className={cn("w-1.5 h-1.5 rounded-full", isActive ? "bg-neon-cyan blink" : "bg-gray-600")} />
+                  {domain.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-            {images.length < 5 && (
-              <motion.label
-                htmlFor="image-upload"
-                className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <div className="text-center">
-                  <ImageIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                  <span className="text-sm text-gray-600">Add More</span>
-                </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleFileInput}
-                  className="hidden"
-                  id="image-upload"
-                />
-              </motion.label>
+        {/* Search / Suggestions Area */}
+        <div className="glass-panel p-6 rounded-2xl flex-1 flex flex-col overflow-hidden relative border-t-4 border-t-neon-cyan">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
+              <Search className="w-4 h-4 text-neon-cyan" />
+              Suggested Assets
+            </h3>
+            <button
+              onClick={() => document.getElementById('panel-upload')?.click()}
+              className="text-xs text-gray-400 hover:text-white flex items-center gap-1 hover:underline"
+            >
+              <Upload className="w-3 h-3" /> Upload specific
+            </button>
+            <input id="panel-upload" type="file" multiple accept="image/*" className="hidden" onChange={handleFileInput} />
+          </div>
+
+          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+            {isSearching ? (
+              <div className="h-full flex flex-col items-center justify-center text-neon-cyan/50">
+                <RefreshCw className="w-8 h-8 animate-spin mb-2" />
+                <span className="text-xs font-mono">SCANNING NETWORK...</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {searchResults.map((url, i) => (
+                  <motion.div
+                    key={`${url}-${i}`}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="aspect-[3/4] rounded-lg overflow-hidden relative group cursor-pointer border border-white/5 hover:border-neon-cyan transition-colors"
+                    onClick={() => handleSelectImage(url)}
+                  >
+                    <img src={url} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" loading="lazy" />
+                    <div className="absolute inset-0 bg-neon-cyan/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Plus className="w-8 h-8 text-white drop-shadow-md" />
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
             )}
           </div>
-        )}
+        </div>
+      </div>
+
+      {/* RIGHT PANEL: LIVE BOARD PREVIEW */}
+      <div className="lg:w-2/3 glass-panel p-8 rounded-2xl flex flex-col relative overflow-hidden">
+        {/* Grid Background */}
+        <div className="absolute inset-0 bg-grid-pattern opacity-30 pointer-events-none" />
+
+        <div className="flex justify-between items-center mb-6 z-10">
+          <div>
+            <h3 className="text-xl font-bold text-white glow-text-purple">Master Vision Matrix</h3>
+            <p className="text-xs text-gray-400 font-mono mt-1">
+              TOTAL ASSETS: {totalImages} // SYNC STATUS: NOMINAL
+            </p>
+          </div>
+          <div className="px-3 py-1 rounded bg-white/5 border border-white/10 text-xs text-neon-purple font-mono border-neon-purple/30">
+            LIVE_PREVIEW_MODE
+          </div>
+        </div>
+
+        <div
+          className={cn(
+            "flex-1 overflow-y-auto pr-2 relative transition-all duration-300 min-h-[500px]",
+            dragging && "opacity-50 scale-[0.98]"
+          )}
+          onDrop={handleDrop}
+          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+        >
+          {totalImages === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-gray-500 border-2 border-dashed border-white/5 rounded-xl bg-black/20">
+              <ImageIcon className="w-16 h-16 opacity-20 mb-4" />
+              <p className="font-mono text-sm max-w-md text-center">
+                MATRIX EMPTY. <br />
+                <span className="text-neon-cyan">SELECT ASSETS FROM LEFT</span> OR <span className="text-neon-purple">DRAG FILES HERE</span>.
+              </p>
+            </div>
+          ) : (
+            <div className="columns-2 md:columns-3 gap-4 space-y-4 pb-20">
+              <AnimatePresence>
+                {domains.map(domain => {
+                  const domainImgs = domainImages[domain.name] || [];
+                  return domainImgs.map((url, imgIndex) => (
+                    <motion.div
+                      key={`${domain.name}-${imgIndex}`}
+                      layout
+                      initial={{ opacity: 0, scale: 0.5, y: 50 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.5 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                      className="break-inside-avoid mb-4 relative group"
+                    >
+                      <div className={cn(
+                        "relative rounded-xl overflow-hidden border transition-all duration-300 bg-black/40",
+                        domain.name === currentDomain.name
+                          ? "border-neon-cyan/50 shadow-[0_0_15px_rgba(6,182,212,0.15)]"
+                          : "border-white/10 opacity-70 hover:opacity-100"
+                      )}>
+                        <img
+                          src={url}
+                          alt="Asset"
+                          className="w-full h-auto object-cover"
+                        />
+
+                        {/* Hover Overlay */}
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 backdrop-blur-sm">
+                          <button
+                            onClick={() => removeImage(domain.name, imgIndex)}
+                            className="p-3 bg-red-500/20 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all scale-90 hover:scale-100 ring-1 ring-red-500/50"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
+
+                        {/* Domain Tag */}
+                        <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/60 backdrop-blur text-[9px] text-white font-mono rounded border border-white/10 uppercase">
+                          {domain.name}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ));
+                })}
+              </AnimatePresence>
+            </div>
+          )}
+
+          {dragging && (
+            <div className="absolute inset-0 flex items-center justify-center bg-neon-cyan/10 border-2 border-neon-cyan border-dashed rounded-xl z-50 backdrop-blur-sm">
+              <p className="text-neon-cyan font-bold text-xl animate-pulse tracking-widest">INITIATE UPLOAD</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

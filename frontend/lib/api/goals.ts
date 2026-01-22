@@ -21,6 +21,44 @@ export const goalsApi = {
   getAll: async (): Promise<Goal[]> => {
     if (shouldUseMockData()) {
       await new Promise((resolve) => setTimeout(resolve, 300));
+
+      // Attempt to load from localStorage for Onboarding persistence
+      if (typeof window !== "undefined") {
+        const storedData = localStorage.getItem("vision-board-data");
+        if (storedData) {
+          try {
+            const userData = JSON.parse(storedData);
+            if (userData.goals && Array.isArray(userData.goals) && userData.domains) {
+              return userData.goals.map((g: any, index: number) => {
+                // Find domain index for stable ID
+                const domainIndex = userData.domains.findIndex((d: any) => d.name === g.domain);
+                const domainId = domainIndex >= 0 ? `dom_${domainIndex}` : `dom_${index}`;
+
+                return {
+                  id: `goal_${index}`,
+                  domainId: domainId,
+                  title: `Strategic Plan: ${g.domain}`,
+                  description: `AI-generated roadmap for ${g.domain}`,
+                  status: "active",
+                  startDate: new Date().toISOString(),
+                  targetDate: null,
+                  milestones: (g.milestones || []).map((m: string, mIndex: number) => ({
+                    id: `mile_${index}_${mIndex}`,
+                    title: m,
+                    targetDate: null,
+                    completedAt: null,
+                    sortOrder: mIndex
+                  })),
+                  createdAt: userData.createdAt || new Date().toISOString(),
+                };
+              });
+            }
+          } catch (e) {
+            console.error("Failed to parse local stored vision data for goals", e);
+          }
+        }
+      }
+
       return mockGoals6Months;
     }
 

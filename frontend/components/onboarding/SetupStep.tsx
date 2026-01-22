@@ -1,193 +1,252 @@
-"use client";
-
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { Clock, Bell, Sparkles, Calendar } from "lucide-react";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Clock, Bell, Sparkles, Calendar, Power, CheckCircle, Activity } from "lucide-react";
 import { SystemButton } from "@/components/shared/SystemButton";
 import Confetti from "react-confetti";
-import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 interface SetupStepProps {
   bedtimeReminder: string;
   morningReminder: string;
   onRemindersChange: (bedtime: string, morning: string) => void;
+  onComplete: () => void;
+  domainImages: Record<string, string[]>;
 }
 
 export function SetupStep({
   bedtimeReminder,
   morningReminder,
   onRemindersChange,
+  onComplete,
+  domainImages
 }: SetupStepProps) {
   const [showConfetti, setShowConfetti] = useState(false);
-  const router = useRouter();
+  const [isLaunching, setIsLaunching] = useState(false);
+  const [activeImages, setActiveImages] = useState<string[]>([]);
+
+  // Flatten images for the collage
+  useEffect(() => {
+    const allImages = Object.values(domainImages).flat();
+    // Shuffle and pick up to 12 for the preview
+    const shuffled = [...allImages].sort(() => 0.5 - Math.random());
+    setActiveImages(shuffled.slice(0, 12));
+  }, [domainImages]);
 
   const handleComplete = () => {
-    setShowConfetti(true);
+    setIsLaunching(true);
     setTimeout(() => {
-      router.push("/dashboard");
-    }, 2000);
+      setShowConfetti(true);
+    }, 1200);
+
+    setTimeout(() => {
+      onComplete();
+    }, 3000);
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-6xl mx-auto space-y-8 min-h-[60vh] flex flex-col justify-center">
       {showConfetti && (
         <Confetti
           width={typeof window !== "undefined" ? window.innerWidth : 1920}
           height={typeof window !== "undefined" ? window.innerHeight : 1080}
           recycle={false}
-          numberOfPieces={200}
+          numberOfPieces={400}
+          colors={['#06b6d4', '#8b5cf6', '#3b82f6']}
         />
       )}
 
-      <div className="text-center">
+      {/* Header */}
+      <div className="text-center mb-8">
         <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 200, damping: 15 }}
-          className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white mb-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-mono text-neon-cyan mb-4"
         >
-          <Calendar className="w-10 h-10" />
+          <Activity className="w-3 h-3 animate-pulse" />
+          SYSTEM CHECK: ALL SYSTEMS GO
         </motion.div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-3">
-          Almost There! Final Setup
+
+        <h2 className="text-4xl font-bold text-white mb-2 glow-text-cyan">
+          Initialization Protocol
         </h2>
-        <p className="text-gray-600">
-          Configure your reminders and preview your first vision board.
+        <p className="text-gray-400 font-light">
+          Finalize operational parameters before system launch.
         </p>
       </div>
 
-      {/* Pixel Budget Visualization */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-xl shadow-lg border border-gray-200 p-6"
-      >
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-blue-600" />
-          Pixel Budget Allocation
-        </h3>
-        <div className="space-y-4">
-          {[
-            { domain: "Career", pixels: 100, color: "#3B82F6" },
-            { domain: "Health", pixels: 80, color: "#10B981" },
-            { domain: "Learning", pixels: 70, color: "#F59E0B" },
-            { domain: "Relationships", pixels: 50, color: "#EC4899" },
-          ].map((item, index) => (
-            <div key={item.domain}>
-              <div className="flex justify-between mb-2">
-                <span className="font-medium text-gray-700">{item.domain}</span>
-                <span className="text-sm text-gray-600">{item.pixels} pixels/week</span>
-              </div>
-              <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-                <motion.div
-                  className="h-full rounded-full"
-                  style={{ backgroundColor: item.color }}
-                  initial={{ width: 0 }}
-                  animate={{ width: `${(item.pixels / 100) * 100}%` }}
-                  transition={{ delay: index * 0.1, duration: 0.8 }}
-                />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+
+        {/* LEFT COL: CONFIGURATION */}
+        <div className="space-y-6">
+          {/* Pixel Budget */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="glass-panel p-6 rounded-2xl"
+          >
+            <h3 className="text-sm font-bold text-gray-300 uppercase tracking-wider mb-6 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-neon-purple" />
+              Focus Distribution
+            </h3>
+
+            <div className="space-y-5">
+              {[
+                { domain: "Career", pixels: 100, color: "#3b82f6" },
+                { domain: "Health", pixels: 80, color: "#10b981" },
+                { domain: "Learning", pixels: 70, color: "#f59e0b" },
+                { domain: "Relationships", pixels: 50, color: "#ec4899" },
+              ].map((item, index) => (
+                <div key={item.domain}>
+                  <div className="flex justify-between mb-1.5 text-xs font-mono">
+                    <span className="text-gray-400">{item.domain.toUpperCase()}</span>
+                    <span className="text-gray-500">{item.pixels} PX</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full rounded-full"
+                      style={{ backgroundColor: item.color, boxShadow: `0 0 10px ${item.color}` }}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(item.pixels / 100) * 100}%` }}
+                      transition={{ delay: index * 0.1, duration: 1 }}
+                    />
+                  </div>
+                </div>
+              ))}
+
+              <div className="pt-4 border-t border-white/5 flex justify-between items-center">
+                <span className="text-xs text-gray-500 font-mono">TOTAL SYSTEM LOAD</span>
+                <span className="text-xs text-neon-cyan font-bold font-mono">100% OPTIMAL</span>
               </div>
             </div>
-          ))}
-          <p className="text-sm text-gray-500 mt-4">
-            Total: 300 pixels per week (distributed based on your domain goals)
-          </p>
-        </div>
-      </motion.div>
+          </motion.div>
 
-      {/* Week 1 Board Preview */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="bg-white rounded-xl shadow-lg border border-gray-200 p-6"
-      >
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Your Week 1 Vision Board Preview
-        </h3>
-        <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center relative overflow-hidden">
-          <div className="absolute inset-0 opacity-30">
-            <div
-              className="w-full h-full"
-              style={{
-                backgroundImage: `
-                  linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
-                  linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)
-                `,
-                backgroundSize: "40px 40px",
+          {/* Reminders */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
+            className="glass-panel p-6 rounded-2xl"
+          >
+            <h3 className="text-sm font-bold text-gray-300 uppercase tracking-wider mb-6 flex items-center gap-2">
+              <Bell className="w-4 h-4 text-neon-cyan" />
+              Sync Schedule
+            </h3>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-black/20 border border-white/5 p-4 rounded-xl">
+                <label className="block text-[10px] font-mono text-gray-500 mb-2 uppercase">
+                  Evening Sync
+                </label>
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-gray-400" />
+                  <input
+                    type="time"
+                    value={bedtimeReminder}
+                    onChange={(e) => onRemindersChange(e.target.value, morningReminder)}
+                    className="bg-transparent text-white font-mono text-lg focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-black/20 border border-white/5 p-4 rounded-xl">
+                <label className="block text-[10px] font-mono text-gray-500 mb-2 uppercase">
+                  Morning Brief
+                </label>
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-gray-400" />
+                  <input
+                    type="time"
+                    value={morningReminder}
+                    onChange={(e) => onRemindersChange(bedtimeReminder, e.target.value)}
+                    className="bg-transparent text-white font-mono text-lg focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* RIGHT COL: BOARD SIMULATION */}
+        <div className="h-full">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="glass-panel p-1 rounded-2xl h-full relative overflow-hidden group min-h-[500px]"
+          >
+            {/* THE ACTUAL BOARD VISUALIZATION */}
+            <motion.div
+              className="w-full h-full bg-black rounded-xl overflow-hidden relative"
+              animate={{
+                filter: isLaunching ? "grayscale(0%)" : "grayscale(100%)"
               }}
-            />
-          </div>
-          <div className="text-center z-10">
-            <div className="text-4xl mb-2">🎨</div>
-            <p className="text-gray-600 font-medium">Grayscale Board Ready</p>
-            <p className="text-sm text-gray-500 mt-1">
-              Start journaling to colorize your vision!
-            </p>
-          </div>
-        </div>
-      </motion.div>
+              transition={{ duration: 2, ease: "easeInOut" }}
+            >
+              {/* Grid of Images */}
+              <div className="columns-2 md:columns-3 gap-2 p-2">
+                {activeImages.map((src, i) => (
+                  <div key={i} className="mb-2 break-inside-avoid">
+                    <img src={src} className="w-full rounded-lg object-cover opacity-80" alt="Vision" />
+                  </div>
+                ))}
+              </div>
 
-      {/* Reminder Settings */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="bg-white rounded-xl shadow-lg border border-gray-200 p-6"
-      >
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Bell className="w-5 h-5 text-blue-600" />
-          Reminder Preferences
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <Clock className="w-4 h-4 inline mr-1" />
-              Bedtime Reminder
-            </label>
-            <input
-              type="time"
-              value={bedtimeReminder}
-              onChange={(e) => onRemindersChange(e.target.value, morningReminder)}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <p className="text-xs text-gray-500 mt-1">When to remind you to journal</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <Clock className="w-4 h-4 inline mr-1" />
-              Morning Reminder
-            </label>
-            <input
-              type="time"
-              value={morningReminder}
-              onChange={(e) => onRemindersChange(bedtimeReminder, e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <p className="text-xs text-gray-500 mt-1">When to remind you to validate tasks</p>
-          </div>
-        </div>
-      </motion.div>
+              {/* Overlay Text */}
+              <motion.div
+                animate={{ opacity: isLaunching ? 0 : 1 }}
+                className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 backdrop-blur-[2px] z-10"
+              >
+                <div className="text-4xl mb-4 opacity-50">🎨</div>
+                <p className="text-white font-bold text-lg tracking-widest uppercase">Grayscale Mode</p>
+                <p className="text-gray-400 text-xs font-mono mt-2">Action required to colorize</p>
+              </motion.div>
 
-      {/* Completion Button */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.6 }}
-        className="text-center pt-4"
-      >
+              {/* Launch Overlay Effect */}
+              <AnimatePresence>
+                {isLaunching && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 bg-neon-cyan/20 mix-blend-overlay z-20 pointer-events-none"
+                  />
+                )}
+              </AnimatePresence>
+            </motion.div>
+
+            {/* Border Glow */}
+            <div className={cn(
+              "absolute inset-0 rounded-2xl border-2 pointer-events-none transition-all duration-1000",
+              isLaunching ? "border-neon-cyan shadow-[0_0_30px_rgba(6,182,212,0.3)]" : "border-white/5"
+            )} />
+
+          </motion.div>
+        </div>
+      </div>
+
+      <div className="flex justify-center pt-8">
         <SystemButton
           onClick={handleComplete}
           size="lg"
-          className="px-10 py-4 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-xl"
+          variant="gradient-purple"
+          className={cn(
+            "px-16 py-6 text-lg font-bold tracking-widest transition-all duration-500",
+            isLaunching && "scale-110 shadow-[0_0_50px_rgba(139,92,246,0.6)]"
+          )}
+          disabled={isLaunching}
         >
-          <Sparkles className="w-5 h-5 mr-2" />
-          Complete Setup & Launch Dashboard
+          {isLaunching ? (
+            <span className="flex items-center gap-3">
+              <Activity className="w-5 h-5 animate-spin" />
+              INITIALIZING...
+            </span>
+          ) : (
+            <span className="flex items-center gap-3">
+              <Power className="w-5 h-5" />
+              LAUNCH SYSTEM
+            </span>
+          )}
         </SystemButton>
-        <p className="text-sm text-gray-500 mt-3">
-          You're all set! Your vision board is ready to transform with your daily effort.
-        </p>
-      </motion.div>
+      </div>
     </div>
   );
 }

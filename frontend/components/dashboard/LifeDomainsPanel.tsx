@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { motion } from "framer-motion";
 import { Plus, BarChart3 } from "lucide-react";
 import type { Domain } from "@/lib/types";
@@ -11,7 +12,8 @@ interface LifeDomainsPanelProps {
   onDomainClick?: (domain: Domain) => void;
 }
 
-export function LifeDomainsPanel({
+// ⚡ Bolt: Memoized to prevent re-rendering list of domains on parent state changes
+export const LifeDomainsPanel = memo(function LifeDomainsPanel({
   domains,
   domainProgress = new Map(),
   onAddDomain,
@@ -91,4 +93,4 @@ export function LifeDomainsPanel({
       </div>
     </div>
   );
-}
+});

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
@@ -72,7 +72,11 @@ export default function DashboardPage() {
   });
 
   // Calculations
-  const streakData = journals ? calculateStreak(journals) : { currentStreak: 0, isActive: false };
+  // ⚡ Bolt: Memoized to avoid recalculating streak on every render
+  const streakData = useMemo(() => {
+    return journals ? calculateStreak(journals) : { currentStreak: 0, isActive: false };
+  }, [journals]);
+
   const completionPercentage = currentBoard?.totalPixels
     ? Math.round((currentBoard.coloredPixels / currentBoard.totalPixels) * 100)
     : 0;
@@ -93,10 +97,24 @@ export default function DashboardPage() {
     });
   }, [completionPercentage, currentBoard, celebratedMilestones]);
 
-  const domainProgress = new Map<string, number>();
-  if (pixelSummary && domains) {
-    pixelSummary.byDomain.forEach((d) => domainProgress.set(d.domainId, d.percentage * 100));
-  }
+  // ⚡ Bolt: Memoized to prevent LifeDomainsPanel re-renders when other state changes
+  const domainProgress = useMemo(() => {
+    const progress = new Map<string, number>();
+    if (pixelSummary && domains) {
+      pixelSummary.byDomain.forEach((d) => progress.set(d.domainId, d.percentage * 100));
+    }
+    return progress;
+  }, [pixelSummary, domains]);
+
+  // ⚡ Bolt: Stable callback to prevent LifeDomainsPanel re-renders
+  const handleDomainClick = useCallback(() => {
+    router.push("/domains");
+  }, [router]);
+
+  // ⚡ Bolt: Stable callback to prevent VisionBoardWidget re-renders
+  const handleViewChange = useCallback((view: "weekly" | "monthly" | "annual") => {
+    setBoardType(view);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-purple/30">
@@ -210,7 +228,7 @@ export default function DashboardPage() {
                 board={currentBoard || null}
                 domains={domains || []}
                 currentView={boardType as "weekly" | "monthly" | "annual"}
-                onViewChange={(view) => setBoardType(view)}
+                onViewChange={handleViewChange}
                 isLoading={boardLoading || domainsLoading}
               />
             </div>
@@ -264,7 +282,7 @@ export default function DashboardPage() {
                 <LifeDomainsPanel
                   domains={domains || []}
                   domainProgress={domainProgress}
-                  onDomainClick={(domain) => router.push(`/domains`)}
+                  onDomainClick={handleDomainClick}
                 />
               </div>
             </SystemPanel>

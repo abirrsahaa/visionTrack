@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useScroll, useSpring, useTransform } from "framer-motion";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useMemo } from "react";
 import { Compass, Trophy, Target } from "lucide-react";
 import { Checkpoint } from "./Checkpoint";
 import { CloudLayer, MountainLayer, SparkleLayer } from "./ParallaxLayer";
@@ -14,12 +14,13 @@ interface JourneyMapProps {
 
 export function JourneyMap({ snapshots, onCheckpointClick }: JourneyMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [svgHeight, setSvgHeight] = useState(0);
 
   // Reverse snapshots to show Newest First (Top)
-  const sortedSnapshots = [...snapshots].sort((a, b) =>
-    new Date(b.snapshotDate).getTime() - new Date(a.snapshotDate).getTime()
-  );
+  const sortedSnapshots = useMemo(() => {
+    return [...snapshots].sort((a, b) =>
+      new Date(b.snapshotDate).getTime() - new Date(a.snapshotDate).getTime()
+    );
+  }, [snapshots]);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -36,29 +37,26 @@ export function JourneyMap({ snapshots, onCheckpointClick }: JourneyMapProps) {
   const ITEM_HEIGHT = 400;
   const TOTAL_HEIGHT = Math.max(sortedSnapshots.length * ITEM_HEIGHT, 1000);
 
-  useEffect(() => {
-    setSvgHeight(TOTAL_HEIGHT);
-  }, [TOTAL_HEIGHT]);
-
   const VIEWBOX_WIDTH = 800;
   const CENTER_X = VIEWBOX_WIDTH / 2;
-  const CURVE_WIDTH = 250;
 
   // Generate Path: Starts from Top (Newest) -> Goes Down (Oldest)
-  const pathD = sortedSnapshots.reduce((path, _, i) => {
-    const yStart = i * ITEM_HEIGHT;
-    const yEnd = (i + 1) * ITEM_HEIGHT;
-    const yMid = yStart + ITEM_HEIGHT / 2;
+  const pathD = useMemo(() => {
+    return sortedSnapshots.reduce((path, _, i) => {
+      const yStart = i * ITEM_HEIGHT;
+      const yEnd = (i + 1) * ITEM_HEIGHT;
+      const yMid = yStart + ITEM_HEIGHT / 2;
 
-    const isLeft = i % 2 === 0;
-    const targetX = isLeft ? CENTER_X - 120 : CENTER_X + 120; // Subtle curve
+      const isLeft = i % 2 === 0;
+      const targetX = isLeft ? CENTER_X - 120 : CENTER_X + 120; // Subtle curve
 
-    if (i === 0) {
-      return `M ${CENTER_X} 0 C ${CENTER_X} ${yMid * 0.5}, ${targetX} ${yMid * 0.5}, ${targetX} ${yMid} S ${CENTER_X} ${yEnd - (ITEM_HEIGHT * 0.2)}, ${CENTER_X} ${yEnd}`;
-    }
+      if (i === 0) {
+        return `M ${CENTER_X} 0 C ${CENTER_X} ${yMid * 0.5}, ${targetX} ${yMid * 0.5}, ${targetX} ${yMid} S ${CENTER_X} ${yEnd - (ITEM_HEIGHT * 0.2)}, ${CENTER_X} ${yEnd}`;
+      }
 
-    return `${path} C ${CENTER_X} ${yStart + (ITEM_HEIGHT * 0.2)}, ${targetX} ${yMid - (ITEM_HEIGHT * 0.2)}, ${targetX} ${yMid} S ${CENTER_X} ${yEnd - (ITEM_HEIGHT * 0.2)}, ${CENTER_X} ${yEnd}`;
-  }, "");
+      return `${path} C ${CENTER_X} ${yStart + (ITEM_HEIGHT * 0.2)}, ${targetX} ${yMid - (ITEM_HEIGHT * 0.2)}, ${targetX} ${yMid} S ${CENTER_X} ${yEnd - (ITEM_HEIGHT * 0.2)}, ${CENTER_X} ${yEnd}`;
+    }, "");
+  }, [sortedSnapshots, ITEM_HEIGHT, CENTER_X]);
 
   // Stats
   const totalPixels = snapshots.reduce((sum, s) => sum + s.pixelsSummary.totalPixels, 0);
@@ -110,8 +108,8 @@ export function JourneyMap({ snapshots, onCheckpointClick }: JourneyMapProps) {
         <div className="absolute top-0 left-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }}>
           <svg
             width="100%"
-            height={svgHeight}
-            viewBox={`0 0 ${VIEWBOX_WIDTH} ${svgHeight}`}
+            height={TOTAL_HEIGHT}
+            viewBox={`0 0 ${VIEWBOX_WIDTH} ${TOTAL_HEIGHT}`}
             preserveAspectRatio="none"
             className="opacity-80"
           >

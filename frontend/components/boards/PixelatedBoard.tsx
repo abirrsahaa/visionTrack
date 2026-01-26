@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, memo } from "react";
 import type { VisionBoard, Domain } from "@/lib/types";
 
 interface PixelatedBoardProps {
@@ -10,7 +10,7 @@ interface PixelatedBoardProps {
   showCheckpoints?: boolean;
 }
 
-export function PixelatedBoard({
+export const PixelatedBoard = memo(function PixelatedBoard({
   board,
   domains,
   pixelSize = 10,
@@ -171,10 +171,6 @@ export function PixelatedBoard({
     let visiblePixels = 0;
     let holdStartTime = 0;
     let blinkStartTime = 0;
-
-    const FILL_SPEED = 500; // Pixels per frame (adjust for speed)
-    const HOLD_DURATION = 3000; // ms
-    const BLINK_DURATION = 400; // ms (Quick flash of future)
 
     // Mask Canvas (Offscreen) - This determines what parts of Color Layer are visible
     // We only need 1 channel (alpha), but standard canvas is RGBA.
@@ -453,7 +449,7 @@ export function PixelatedBoard({
       </div>
     </div>
   );
-}
+});
 
 // Helpers
 function drawImageToContext(

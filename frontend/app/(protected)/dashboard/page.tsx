@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
@@ -16,6 +16,9 @@ import { SystemPanel } from "@/components/shared/SystemPanel";
 import { NightJournalPanel } from "@/components/dashboard/NightJournalPanel";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { Compass, Sparkles, Terminal, Activity, LayoutDashboard } from "lucide-react";
+import type { Domain } from "@/lib/types";
+
+const EMPTY_DOMAINS: Domain[] = [];
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -72,7 +75,7 @@ export default function DashboardPage() {
   });
 
   // Calculations
-  const streakData = journals ? calculateStreak(journals) : { currentStreak: 0, isActive: false };
+  const streakData = useMemo(() => journals ? calculateStreak(journals) : { currentStreak: 0, isActive: false }, [journals]);
   const completionPercentage = currentBoard?.totalPixels
     ? Math.round((currentBoard.coloredPixels / currentBoard.totalPixels) * 100)
     : 0;
@@ -93,10 +96,13 @@ export default function DashboardPage() {
     });
   }, [completionPercentage, currentBoard, celebratedMilestones]);
 
-  const domainProgress = new Map<string, number>();
-  if (pixelSummary && domains) {
-    pixelSummary.byDomain.forEach((d) => domainProgress.set(d.domainId, d.percentage * 100));
-  }
+  const domainProgress = useMemo(() => {
+    const map = new Map<string, number>();
+    if (pixelSummary && domains) {
+      pixelSummary.byDomain.forEach((d) => map.set(d.domainId, d.percentage * 100));
+    }
+    return map;
+  }, [pixelSummary, domains]);
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-purple/30">
@@ -208,9 +214,9 @@ export default function DashboardPage() {
 
               <VisionBoardWidget
                 board={currentBoard || null}
-                domains={domains || []}
+                domains={domains || EMPTY_DOMAINS}
                 currentView={boardType as "weekly" | "monthly" | "annual"}
-                onViewChange={(view) => setBoardType(view)}
+                onViewChange={setBoardType}
                 isLoading={boardLoading || domainsLoading}
               />
             </div>

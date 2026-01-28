@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Maximize2, Share2, Crown, Calendar } from "lucide-react";
 import { PixelatedBoard } from "@/components/boards/PixelatedBoard";
@@ -14,7 +14,7 @@ interface VisionBoardWidgetProps {
     isLoading?: boolean;
 }
 
-export function VisionBoardWidget({
+export const VisionBoardWidget = memo(function VisionBoardWidget({
     board,
     domains,
     currentView,
@@ -141,4 +141,4 @@ export function VisionBoardWidget({
             </div>
         </div>
     );
-}
+});

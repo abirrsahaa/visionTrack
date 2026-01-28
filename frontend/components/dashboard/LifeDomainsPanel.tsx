@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { motion } from "framer-motion";
 import { Plus, BarChart3 } from "lucide-react";
 import type { Domain } from "@/lib/types";
@@ -11,7 +12,32 @@ interface LifeDomainsPanelProps {
   onDomainClick?: (domain: Domain) => void;
 }
 
-export function LifeDomainsPanel({
+const DomainSegmentedBar = memo(({ percentage, colorHex }: { percentage: number; colorHex: string }) => {
+  const totalSegments = 20;
+  const activeSegments = Math.round((percentage / 100) * totalSegments);
+
+  return (
+    <div className="flex gap-[2px] h-2">
+      {[...Array(totalSegments)].map((_, i) => {
+        const isActive = i < activeSegments;
+        return (
+          <div
+            key={i}
+            className={`flex-1 rounded-[1px] transition-all duration-500 ${isActive ? 'opacity-100' : 'opacity-10 bg-white/5'}`}
+            style={{
+              backgroundColor: isActive ? colorHex : undefined,
+              boxShadow: isActive ? `0 0 5px ${colorHex}40` : 'none'
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+});
+
+DomainSegmentedBar.displayName = "DomainSegmentedBar";
+
+export const LifeDomainsPanel = memo(function LifeDomainsPanel({
   domains,
   domainProgress = new Map(),
   onAddDomain,
@@ -44,10 +70,6 @@ export function LifeDomainsPanel({
           const percentage = domainProgress.get(domain.id) || 0;
           const domainNumber = String(index + 1).padStart(2, "0");
 
-          // Segmented Bar Config
-          const totalSegments = 20;
-          const activeSegments = Math.round((percentage / 100) * totalSegments);
-
           return (
             <motion.div
               key={domain.id}
@@ -70,25 +92,11 @@ export function LifeDomainsPanel({
               </div>
 
               {/* Segmented Progress Bar */}
-              <div className="flex gap-[2px] h-2">
-                {[...Array(totalSegments)].map((_, i) => {
-                  const isActive = i < activeSegments;
-                  return (
-                    <div
-                      key={i}
-                      className={`flex-1 rounded-[1px] transition-all duration-500 ${isActive ? 'opacity-100' : 'opacity-10 bg-white/5'}`}
-                      style={{
-                        backgroundColor: isActive ? domain.colorHex : undefined,
-                        boxShadow: isActive ? `0 0 5px ${domain.colorHex}40` : 'none'
-                      }}
-                    />
-                  );
-                })}
-              </div>
+              <DomainSegmentedBar percentage={percentage} colorHex={domain.colorHex} />
             </motion.div>
           );
         })}
       </div>
     </div>
   );
-}
+});

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
@@ -16,6 +16,7 @@ import { SystemPanel } from "@/components/shared/SystemPanel";
 import { NightJournalPanel } from "@/components/dashboard/NightJournalPanel";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { Compass, Sparkles, Terminal, Activity, LayoutDashboard } from "lucide-react";
+import type { Domain } from "@/lib/types";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -93,10 +94,17 @@ export default function DashboardPage() {
     });
   }, [completionPercentage, currentBoard, celebratedMilestones]);
 
-  const domainProgress = new Map<string, number>();
-  if (pixelSummary && domains) {
-    pixelSummary.byDomain.forEach((d) => domainProgress.set(d.domainId, d.percentage * 100));
-  }
+  const domainProgress = useMemo(() => {
+    const map = new Map<string, number>();
+    if (pixelSummary && domains) {
+      pixelSummary.byDomain.forEach((d) => map.set(d.domainId, d.percentage * 100));
+    }
+    return map;
+  }, [pixelSummary, domains]);
+
+  const handleDomainClick = useCallback((domain: Domain) => {
+    router.push(`/domains`);
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-purple/30">
@@ -264,7 +272,7 @@ export default function DashboardPage() {
                 <LifeDomainsPanel
                   domains={domains || []}
                   domainProgress={domainProgress}
-                  onDomainClick={(domain) => router.push(`/domains`)}
+                  onDomainClick={handleDomainClick}
                 />
               </div>
             </SystemPanel>

@@ -186,96 +186,44 @@ export function PixelatedBoard({
 
     ctx.imageSmoothingEnabled = false;
 
-    // --- 4. The Animation Loop ---
-    const renderLoop = (timestamp: number) => {
-      // Clear Main Canvas
-      // Draw Grayscale Base Layer first (always visible underneath)
-      ctx.drawImage(grayCanvas, 0, 0);
-
-      // Update State Logic
-      if (currentPhase === 'filling') {
-        visiblePixels += FILL_SPEED;
-        if (visiblePixels >= targetPixelCount) {
-          visiblePixels = targetPixelCount;
-          currentPhase = 'holding';
-          holdStartTime = timestamp;
-        }
-      }
-      else if (currentPhase === 'holding') {
-        if (timestamp - holdStartTime > HOLD_DURATION) {
-          currentPhase = 'blinking';
-          blinkStartTime = timestamp;
-        }
-      }
-      else if (currentPhase === 'blinking') {
-        if (timestamp - blinkStartTime > BLINK_DURATION) {
-          currentPhase = 'resetting';
-          visiblePixels = 0; // Reset
-        }
-      }
-      else if (currentPhase === 'resetting') {
-        // Instant restart or smooth restart? Let's do instant loop
-        currentPhase = 'filling';
-      }
-
-      setDebugPhase(currentPhase); // For debug overlay
-
-      // Draw Mask
-      // Determine how many pixels to show on the mask
-      // If blinking, show ALL pixels (Future Glimpse!)
-      const pixelsDrawingCount = currentPhase === 'blinking' ? totalGridPixels : visiblePixels;
-
-      // Optimizing Mask Update:
-      // Instead of redrawing the whole mask every frame, we could just ADD to it.
-      // But for the 'blinking' to 'resetting' transition, we need to clear it.
-
-      // Strategy: 
-      // 1. If phase switched to 'filling' (from reset), clear mask.
-      // 2. Add new pixels since last frame.
-
-      // However, standard immediate mode style:
-      // Let's rely on the fact that we can just iterate indices up to pixelsDrawingCount.
-      // Note: Iterating 2 million items in JS every frame is slow.
-      // Optimization: Draw chunks on the mask canvas and keep it persistent?
-      // YES.
-
-      // PERSISTENT MASK STRATEGY:
-      // We only modify `maskCtx` when `visiblePixels` increases.
-      // When 'blinking', we overlay a full fill without modifying the underlying 'progress mask' (or we use a temp override).
-      // Actually, let's just use `maskCtx` for the "Progress" and handle blink separately.
-
-      // Update Mask Canvas (Progressive Fill)
-      // We track `lastRenderedPixelCount` in a closure variable outside valid for the loop?
-      // Let's refactor loop vars slightly.
-    };
-
     // Efficient Loop State
     let lastRenderedCount = 0;
 
     const persistentMaskLoop = (timestamp: number) => {
+      let isDirty = false;
+
       // A. State Updates
       if (currentPhase === 'filling') {
+        const prevVisible = visiblePixels;
         visiblePixels += Math.ceil(totalGridPixels / 120); // Finish in ~2 seconds (at 60fps)
+        if (visiblePixels > prevVisible) isDirty = true;
+
         if (visiblePixels >= targetPixelCount) {
           visiblePixels = targetPixelCount;
           currentPhase = 'holding';
           holdStartTime = timestamp;
+          isDirty = true; // Ensure final state is drawn
         }
       } else if (currentPhase === 'holding') {
         if (timestamp - holdStartTime > HOLD_DURATION) {
           currentPhase = 'blinking';
           blinkStartTime = timestamp;
+          isDirty = true;
         }
       } else if (currentPhase === 'blinking') {
+        isDirty = true;
         if (timestamp - blinkStartTime > BLINK_DURATION) {
           currentPhase = 'resetting';
         }
       } else if (currentPhase === 'resetting') {
+        isDirty = true;
         currentPhase = 'filling';
         visiblePixels = 0;
         lastRenderedCount = 0;
         maskCtx.clearRect(0, 0, canvasWidth, canvasHeight); // Clear mask
       }
+
+      setDebugPhase(currentPhase); // For debug overlay
 
       // B. Update Mask (Incremental)
       if (currentPhase === 'filling' && visiblePixels > lastRenderedCount) {
@@ -294,66 +242,36 @@ export function PixelatedBoard({
         lastRenderedCount = visiblePixels;
       }
 
-      // C. Composition
-      // 1. Draw Gray Background
-      ctx.drawImage(grayCanvas, 0, 0);
+      // C. Composition - ONLY if visual state changed
+      if (isDirty) {
+        // 1. Draw Gray Background
+        ctx.drawImage(grayCanvas, 0, 0);
 
-      // 2. Prepare to Draw Color Layer masked by Mask Layer
-      ctx.save();
+        // 2. Prepare to Draw Color Layer masked by Mask Layer
+        ctx.save();
 
-      // If blinking, we ignore the mask and just show FULL color (maybe with some opacity flicker?)
-      if (currentPhase === 'blinking') {
-        // Future Glimpse Mode!
-        ctx.globalAlpha = 0.9 + Math.random() * 0.1; // Slight flicker
-        ctx.drawImage(colorCanvas, 0, 0);
+        // If blinking, we ignore the mask and just show FULL color (maybe with some opacity flicker?)
+        if (currentPhase === 'blinking') {
+          // Future Glimpse Mode!
+          ctx.globalAlpha = 0.9 + Math.random() * 0.1; // Slight flicker
+          ctx.drawImage(colorCanvas, 0, 0);
 
-        // Add a "Pure White" flash overlay at the start of blink?
-        if (timestamp - blinkStartTime < 50) {
-          ctx.fillStyle = 'white';
-          ctx.globalAlpha = 0.3;
-          ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+          // Add a "Pure White" flash overlay at the start of blink?
+          if (timestamp - blinkStartTime < 50) {
+            ctx.fillStyle = 'white';
+            ctx.globalAlpha = 0.3;
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+          }
+        } else {
+          // Standard Progress Mode - use the persistent temp canvas logic
+          // (Handled by drawMaskedColorLayer below)
         }
-      } else {
-        // Standard Progress Mode
-        // We need to apply the mask.
-        // Canvas logic: destination-in keeps destination where source overlaps.
-        // But we want to draw Color *masked by* Mask.
-        // Easiest: Draw Mask first (opaque), then draw Color with 'source-in'?
-        // No, that replaces the canvas content.
-        // We need an intermediate buffer for the masked color layer if we want to composit over gray.
+        ctx.restore();
 
-        // Option: 
-        // 1. Create a temp layer.
-        // 2. Draw Color Layer.
-        // 3. Draw Mask Layer with 'destination-in' (keeps color only where mask is).
-        // 4. Draw temp layer onto Main Context.
-
-        // BUT creating a 1920x1080 canvas every frame is DEATH for Perf.
-        // Solution: Using 'clip' from the mask? Path based clipping is slow for millions of rects.
-
-        // Optimized Composition:
-        // Main Ctx already has Gray.
-        // We want to draw Color on top, but restricted to Mask pixels.
-        // Since Mask is just black pixels on transparency...
-        // We can assume pixels align?
-
-        // Efficient way without limited layers:
-        // 1. Draw Gray on Main.
-        // 2. Draw Color on Main.
-        // 3. Draw "Inverse Mask" to erase Color revealing Gray?? Hard.
-
-        // Back to Temp Canvas (re-used):
-        // We need ONE persistent temp canvas.
-        // See 'compositionCanvas' below.
+        if (currentPhase !== 'blinking') {
+          drawMaskedColorLayer();
+        }
       }
-      ctx.restore();
-
-      if (currentPhase !== 'blinking') {
-        drawMaskedColorLayer();
-      }
-
-      // Debug/Overlay info
-      // (Handled by React UI overlay, not canvas)
 
       animationRef.current = requestAnimationFrame(persistentMaskLoop);
     };

@@ -251,6 +251,7 @@ export function PixelatedBoard({
 
     // Efficient Loop State
     let lastRenderedCount = 0;
+    let isMaskDirty = true; // Optimization: Only recomposite when mask changes
 
     const persistentMaskLoop = (timestamp: number) => {
       // A. State Updates
@@ -275,6 +276,7 @@ export function PixelatedBoard({
         visiblePixels = 0;
         lastRenderedCount = 0;
         maskCtx.clearRect(0, 0, canvasWidth, canvasHeight); // Clear mask
+        isMaskDirty = true;
       }
 
       // B. Update Mask (Incremental)
@@ -292,6 +294,7 @@ export function PixelatedBoard({
         }
         maskCtx.fill();
         lastRenderedCount = visiblePixels;
+        isMaskDirty = true;
       }
 
       // C. Composition
@@ -349,7 +352,8 @@ export function PixelatedBoard({
       ctx.restore();
 
       if (currentPhase !== 'blinking') {
-        drawMaskedColorLayer();
+        drawMaskedColorLayer(isMaskDirty);
+        if (isMaskDirty) isMaskDirty = false;
       }
 
       // Debug/Overlay info
@@ -364,20 +368,23 @@ export function PixelatedBoard({
     compCanvas.height = canvasHeight;
     const compCtx = compCanvas.getContext('2d');
 
-    const drawMaskedColorLayer = () => {
+    const drawMaskedColorLayer = (shouldRecomposite: boolean) => {
       if (!compCtx) return;
-      // Clear temp
-      compCtx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-      // 1. Draw the Mask (The shape we want)
-      compCtx.drawImage(maskCanvas, 0, 0);
+      if (shouldRecomposite) {
+        // Clear temp
+        compCtx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-      // 2. Draw the Color Image source-in (ONLY keep color where mask exists)
-      compCtx.globalCompositeOperation = 'source-in';
-      compCtx.drawImage(colorCanvas, 0, 0);
+        // 1. Draw the Mask (The shape we want)
+        compCtx.drawImage(maskCanvas, 0, 0);
 
-      // 3. Reset Composite
-      compCtx.globalCompositeOperation = 'source-over';
+        // 2. Draw the Color Image source-in (ONLY keep color where mask exists)
+        compCtx.globalCompositeOperation = 'source-in';
+        compCtx.drawImage(colorCanvas, 0, 0);
+
+        // 3. Reset Composite
+        compCtx.globalCompositeOperation = 'source-over';
+      }
 
       // 4. Draw result onto Main Canvas (on top of Gray)
       ctx.drawImage(compCanvas, 0, 0);

@@ -251,6 +251,8 @@ export function PixelatedBoard({
 
     // Efficient Loop State
     let lastRenderedCount = 0;
+    let isMaskDirty = true;
+    let hasDrawn = false;
 
     const persistentMaskLoop = (timestamp: number) => {
       // A. State Updates
@@ -275,6 +277,7 @@ export function PixelatedBoard({
         visiblePixels = 0;
         lastRenderedCount = 0;
         maskCtx.clearRect(0, 0, canvasWidth, canvasHeight); // Clear mask
+        isMaskDirty = true;
       }
 
       // B. Update Mask (Incremental)
@@ -292,64 +295,40 @@ export function PixelatedBoard({
         }
         maskCtx.fill();
         lastRenderedCount = visiblePixels;
+        isMaskDirty = true;
       }
 
       // C. Composition
-      // 1. Draw Gray Background
-      ctx.drawImage(grayCanvas, 0, 0);
+      // Optimize: Only redraw if necessary (mask changed, blinking, or initial draw)
+      if (isMaskDirty || currentPhase === 'blinking' || !hasDrawn) {
+        // 1. Draw Gray Background
+        ctx.drawImage(grayCanvas, 0, 0);
 
-      // 2. Prepare to Draw Color Layer masked by Mask Layer
-      ctx.save();
+        // 2. Prepare to Draw Color Layer masked by Mask Layer
+        ctx.save();
 
-      // If blinking, we ignore the mask and just show FULL color (maybe with some opacity flicker?)
-      if (currentPhase === 'blinking') {
-        // Future Glimpse Mode!
-        ctx.globalAlpha = 0.9 + Math.random() * 0.1; // Slight flicker
-        ctx.drawImage(colorCanvas, 0, 0);
+        // If blinking, we ignore the mask and just show FULL color (maybe with some opacity flicker?)
+        if (currentPhase === 'blinking') {
+          // Future Glimpse Mode!
+          ctx.globalAlpha = 0.9 + Math.random() * 0.1; // Slight flicker
+          ctx.drawImage(colorCanvas, 0, 0);
 
-        // Add a "Pure White" flash overlay at the start of blink?
-        if (timestamp - blinkStartTime < 50) {
-          ctx.fillStyle = 'white';
-          ctx.globalAlpha = 0.3;
-          ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+          // Add a "Pure White" flash overlay at the start of blink?
+          if (timestamp - blinkStartTime < 50) {
+            ctx.fillStyle = 'white';
+            ctx.globalAlpha = 0.3;
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+          }
+        } else {
+          // Standard Progress Mode
+          if (isMaskDirty) {
+            updateCompCanvas();
+            isMaskDirty = false;
+          }
+          ctx.drawImage(compCanvas, 0, 0);
         }
-      } else {
-        // Standard Progress Mode
-        // We need to apply the mask.
-        // Canvas logic: destination-in keeps destination where source overlaps.
-        // But we want to draw Color *masked by* Mask.
-        // Easiest: Draw Mask first (opaque), then draw Color with 'source-in'?
-        // No, that replaces the canvas content.
-        // We need an intermediate buffer for the masked color layer if we want to composit over gray.
-
-        // Option: 
-        // 1. Create a temp layer.
-        // 2. Draw Color Layer.
-        // 3. Draw Mask Layer with 'destination-in' (keeps color only where mask is).
-        // 4. Draw temp layer onto Main Context.
-
-        // BUT creating a 1920x1080 canvas every frame is DEATH for Perf.
-        // Solution: Using 'clip' from the mask? Path based clipping is slow for millions of rects.
-
-        // Optimized Composition:
-        // Main Ctx already has Gray.
-        // We want to draw Color on top, but restricted to Mask pixels.
-        // Since Mask is just black pixels on transparency...
-        // We can assume pixels align?
-
-        // Efficient way without limited layers:
-        // 1. Draw Gray on Main.
-        // 2. Draw Color on Main.
-        // 3. Draw "Inverse Mask" to erase Color revealing Gray?? Hard.
-
-        // Back to Temp Canvas (re-used):
-        // We need ONE persistent temp canvas.
-        // See 'compositionCanvas' below.
-      }
-      ctx.restore();
-
-      if (currentPhase !== 'blinking') {
-        drawMaskedColorLayer();
+        ctx.restore();
+        hasDrawn = true;
       }
 
       // Debug/Overlay info
@@ -364,7 +343,7 @@ export function PixelatedBoard({
     compCanvas.height = canvasHeight;
     const compCtx = compCanvas.getContext('2d');
 
-    const drawMaskedColorLayer = () => {
+    const updateCompCanvas = () => {
       if (!compCtx) return;
       // Clear temp
       compCtx.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -378,9 +357,6 @@ export function PixelatedBoard({
 
       // 3. Reset Composite
       compCtx.globalCompositeOperation = 'source-over';
-
-      // 4. Draw result onto Main Canvas (on top of Gray)
-      ctx.drawImage(compCanvas, 0, 0);
     };
 
     // Start Loop

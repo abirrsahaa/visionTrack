@@ -17,7 +17,21 @@ export function PixelatedBoard({
   showCheckpoints = false,
 }: PixelatedBoardProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Static resources refs (survive re-renders without causing them)
+  const grayCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const colorCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const maskCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const compCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const indicesRef = useRef<Uint32Array | null>(null);
+  const gridInfoRef = useRef<{ cols: number; rows: number; total: number }>({ cols: 0, rows: 0, total: 0 });
+  const initializedRef = useRef(false);
+
+  // Dynamic state refs (for animation loop to read)
+  const boardStatsRef = useRef({ coloredPixels: 0, totalPixels: 0 });
+
+  // State for synchronization
+  const [generationId, setGenerationId] = useState(0);
 
   // State for image loading
   const [isLoading, setIsLoading] = useState(true);
@@ -31,10 +45,25 @@ export function PixelatedBoard({
   const canvasWidth = 1920;
   const canvasHeight = 1080;
 
-  // Load Images Logic
+  // Sync board stats to ref for animation loop
+  useEffect(() => {
+    boardStatsRef.current = {
+      coloredPixels: board.coloredPixels,
+      totalPixels: board.totalPixels
+    };
+  }, [board.coloredPixels, board.totalPixels]);
+
+  // 1. Efficient Image Loading
+  // Only reload if image URLs change
+  const imagesKey = JSON.stringify(domains.map(d => d.images.map(i => i.imageUrl)));
+
   useEffect(() => {
     let isMounted = true;
     const loadAllImages = async () => {
+      // Don't set loading if we already have images and just updating props?
+      // Actually we do need to wait if URLs changed.
+      setIsLoading(true);
+
       const imageMap = new Map<string, HTMLImageElement>();
       const loadPromises: Promise<void>[] = [];
 
@@ -66,59 +95,53 @@ export function PixelatedBoard({
 
     if (domains.length > 0) loadAllImages();
     return () => { isMounted = false; };
-  }, [domains]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [imagesKey]); // Only reload when URLs change
 
-  // Main Canvas & Animation Logic
+  // 2. Static Layer Generation (Expensive Part)
+  // Re-run only when layout (domains/boardType) or images or pixelSize change.
+  // NOT when board progress changes.
   useEffect(() => {
-    if (!canvasRef.current || isLoading || loadedImages.size === 0) return;
+    if (isLoading || loadedImages.size === 0) return;
 
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    if (!ctx) return;
-
-    canvas.width = canvasWidth;
-    canvas.height = canvasHeight;
-
-    // --- 1. Prepare Layers (Offscreen Canvases) ---
-    // Layer 1: Grayscale Base (The "faded" reality)
+    // Initialize Offscreen Canvases
     const grayCanvas = document.createElement("canvas");
     grayCanvas.width = canvasWidth;
     grayCanvas.height = canvasHeight;
     const grayCtx = grayCanvas.getContext("2d");
 
-    // Layer 2: Full Color Target (The "Vision")
     const colorCanvas = document.createElement("canvas");
     colorCanvas.width = canvasWidth;
     colorCanvas.height = canvasHeight;
     const colorCtx = colorCanvas.getContext("2d");
 
+    const maskCanvas = document.createElement('canvas');
+    maskCanvas.width = canvasWidth;
+    maskCanvas.height = canvasHeight;
+
+    const compCanvas = document.createElement('canvas');
+    compCanvas.width = canvasWidth;
+    compCanvas.height = canvasHeight;
+
     if (!grayCtx || !colorCtx) return;
 
-    // --- 2. Compose the Board Layout on Layers ---
+    // Compose Board
     const layout = calculateLayout(board.boardType, domains, canvasWidth, canvasHeight);
 
-    // Draw the static board content onto Color and Gray layers
-    // We do this ONCE to save performance
     layout.forEach((item) => {
       const domain = domains.find((d) => d.id === item.domainId);
       if (!domain) return;
-
-      // Determine which image(s) to draw
-      // For simplicity reusing the weekly/monthly logic from before but customized for layers
-      // Using "cover" logic manually similar to previous implementation
 
       if (board.boardType === "weekly" || domain.images.length === 1) {
         const img = loadedImages.get(`${domain.id}_0`);
         if (img) {
           drawImageToContext(colorCtx, img, item.x, item.y, item.width, item.height);
-          drawImageToContext(grayCtx, img, item.x, item.y, item.width, item.height, true); // grayscale
+          drawImageToContext(grayCtx, img, item.x, item.y, item.width, item.height, true);
         } else {
-          // Fallback placeholder
           drawPlaceholder(colorCtx, item, domain.colorHex, domain.name, false);
           drawPlaceholder(grayCtx, item, domain.colorHex, domain.name, true);
         }
       } else {
-        // Multi-image layout
         const imageCount = Math.min(domain.images.length, 4);
         const subCols = Math.ceil(Math.sqrt(imageCount));
         const subColsCalc = subCols > 0 ? subCols : 1;
@@ -141,128 +164,116 @@ export function PixelatedBoard({
       }
     });
 
-    // Draw Pixel Grid Lines on both (optional, maybe just on final canvas)
     drawPixelatedGrid(grayCtx, canvasWidth, canvasHeight, pixelSize, "rgba(255,255,255,0.05)");
     drawPixelatedGrid(colorCtx, canvasWidth, canvasHeight, pixelSize, "rgba(255,255,255,0.1)");
 
+    // Store in refs
+    grayCanvasRef.current = grayCanvas;
+    colorCanvasRef.current = colorCanvas;
+    maskCanvasRef.current = maskCanvas;
+    compCanvasRef.current = compCanvas;
 
-    // --- 3. Animation State Setup ---
+    // Generate Indices
     const gridCols = Math.ceil(canvasWidth / pixelSize);
     const gridRows = Math.ceil(canvasHeight / pixelSize);
     const totalGridPixels = gridCols * gridRows;
+    gridInfoRef.current = { cols: gridCols, rows: gridRows, total: totalGridPixels };
 
-    // Generate Shuffled Grid Indices for "Random" Filling
     const indices = new Uint32Array(totalGridPixels);
     for (let i = 0; i < totalGridPixels; i++) indices[i] = i;
-    // Fisher-Yates Shuffle
     for (let i = totalGridPixels - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       const temp = indices[i];
       indices[i] = indices[j];
       indices[j] = temp;
     }
+    indicesRef.current = indices;
+    initializedRef.current = true;
+    setGenerationId((prev) => prev + 1);
 
-    // Animation Config
-    const overallCompletionRate = board.totalPixels > 0 ? (board.coloredPixels / board.totalPixels) : 0;
-    const targetPixelCount = Math.floor(totalGridPixels * overallCompletionRate);
+  }, [isLoading, loadedImages, board.boardType, domains, pixelSize, imagesKey]);
+
+  // 3. Animation Loop
+  // Depend only on initializedRef and static configs
+  useEffect(() => {
+    if (!canvasRef.current || !initializedRef.current) return;
+
+    // We poll 'initializedRef' via effect dependency on loadedImages/etc triggering parent re-render?
+    // No, separate effect.
+    // Actually, we can just depend on [loadedImages, ...] for this start up too?
+    // Or simpler: The loop effect should have no dependencies that change often.
+  }, []);
+
+  // Combined Logic:
+  // We need an effect that starts the loop when everything is ready.
+  useEffect(() => {
+    if (!canvasRef.current || isLoading || !initializedRef.current) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return;
+
+    ctx.imageSmoothingEnabled = false;
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+
+    // Grab refs
+    const grayCanvas = grayCanvasRef.current!;
+    const colorCanvas = colorCanvasRef.current!;
+    const maskCanvas = maskCanvasRef.current!;
+    const compCanvas = compCanvasRef.current!;
+    const indices = indicesRef.current!;
+    const { cols: gridCols, total: totalGridPixels } = gridInfoRef.current;
 
     // Animation Variables
     let currentPhase: 'filling' | 'holding' | 'blinking' | 'resetting' = 'filling';
     let visiblePixels = 0;
     let holdStartTime = 0;
     let blinkStartTime = 0;
-
-    const FILL_SPEED = 500; // Pixels per frame (adjust for speed)
-    const HOLD_DURATION = 3000; // ms
-    const BLINK_DURATION = 400; // ms (Quick flash of future)
-
-    // Mask Canvas (Offscreen) - This determines what parts of Color Layer are visible
-    // We only need 1 channel (alpha), but standard canvas is RGBA.
-    const maskCanvas = document.createElement('canvas');
-    maskCanvas.width = canvasWidth;
-    maskCanvas.height = canvasHeight;
-    const maskCtx = maskCanvas.getContext('2d');
-    if (!maskCtx) return;
-
-    ctx.imageSmoothingEnabled = false;
-
-    // --- 4. The Animation Loop ---
-    const renderLoop = (timestamp: number) => {
-      // Clear Main Canvas
-      // Draw Grayscale Base Layer first (always visible underneath)
-      ctx.drawImage(grayCanvas, 0, 0);
-
-      // Update State Logic
-      if (currentPhase === 'filling') {
-        visiblePixels += FILL_SPEED;
-        if (visiblePixels >= targetPixelCount) {
-          visiblePixels = targetPixelCount;
-          currentPhase = 'holding';
-          holdStartTime = timestamp;
-        }
-      }
-      else if (currentPhase === 'holding') {
-        if (timestamp - holdStartTime > HOLD_DURATION) {
-          currentPhase = 'blinking';
-          blinkStartTime = timestamp;
-        }
-      }
-      else if (currentPhase === 'blinking') {
-        if (timestamp - blinkStartTime > BLINK_DURATION) {
-          currentPhase = 'resetting';
-          visiblePixels = 0; // Reset
-        }
-      }
-      else if (currentPhase === 'resetting') {
-        // Instant restart or smooth restart? Let's do instant loop
-        currentPhase = 'filling';
-      }
-
-      setDebugPhase(currentPhase); // For debug overlay
-
-      // Draw Mask
-      // Determine how many pixels to show on the mask
-      // If blinking, show ALL pixels (Future Glimpse!)
-      const pixelsDrawingCount = currentPhase === 'blinking' ? totalGridPixels : visiblePixels;
-
-      // Optimizing Mask Update:
-      // Instead of redrawing the whole mask every frame, we could just ADD to it.
-      // But for the 'blinking' to 'resetting' transition, we need to clear it.
-
-      // Strategy: 
-      // 1. If phase switched to 'filling' (from reset), clear mask.
-      // 2. Add new pixels since last frame.
-
-      // However, standard immediate mode style:
-      // Let's rely on the fact that we can just iterate indices up to pixelsDrawingCount.
-      // Note: Iterating 2 million items in JS every frame is slow.
-      // Optimization: Draw chunks on the mask canvas and keep it persistent?
-      // YES.
-
-      // PERSISTENT MASK STRATEGY:
-      // We only modify `maskCtx` when `visiblePixels` increases.
-      // When 'blinking', we overlay a full fill without modifying the underlying 'progress mask' (or we use a temp override).
-      // Actually, let's just use `maskCtx` for the "Progress" and handle blink separately.
-
-      // Update Mask Canvas (Progressive Fill)
-      // We track `lastRenderedPixelCount` in a closure variable outside valid for the loop?
-      // Let's refactor loop vars slightly.
-    };
-
-    // Efficient Loop State
     let lastRenderedCount = 0;
 
+    const FILL_SPEED = 500;
+    const HOLD_DURATION = 3000;
+    const BLINK_DURATION = 400;
+
+    const maskCtx = maskCanvas.getContext('2d')!;
+    const compCtx = compCanvas.getContext('2d')!;
+
+    // Helper for composition
+    const drawMaskedColorLayer = () => {
+      compCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+      compCtx.drawImage(maskCanvas, 0, 0);
+      compCtx.globalCompositeOperation = 'source-in';
+      compCtx.drawImage(colorCanvas, 0, 0);
+      compCtx.globalCompositeOperation = 'source-over';
+      ctx.drawImage(compCanvas, 0, 0);
+    };
+
     const persistentMaskLoop = (timestamp: number) => {
+      // Read latest target from ref
+      const { coloredPixels, totalPixels } = boardStatsRef.current;
+      const overallCompletionRate = totalPixels > 0 ? (coloredPixels / totalPixels) : 0;
+      const targetPixelCount = Math.floor(totalGridPixels * overallCompletionRate);
+
       // A. State Updates
       if (currentPhase === 'filling') {
-        visiblePixels += Math.ceil(totalGridPixels / 120); // Finish in ~2 seconds (at 60fps)
+        // Dynamic speed based on distance
+        const dist = targetPixelCount - visiblePixels;
+        const speed = Math.max(FILL_SPEED, Math.ceil(dist / 60)); // finish quickly if far behind
+
+        visiblePixels += speed;
+
         if (visiblePixels >= targetPixelCount) {
           visiblePixels = targetPixelCount;
+          // Only enter holding phase if we actually reached the *full* target
           currentPhase = 'holding';
           holdStartTime = timestamp;
         }
       } else if (currentPhase === 'holding') {
-        if (timestamp - holdStartTime > HOLD_DURATION) {
+        // If target increased while holding, go back to filling
+        if (targetPixelCount > visiblePixels) {
+          currentPhase = 'filling';
+        } else if (timestamp - holdStartTime > HOLD_DURATION) {
           currentPhase = 'blinking';
           blinkStartTime = timestamp;
         }
@@ -274,14 +285,14 @@ export function PixelatedBoard({
         currentPhase = 'filling';
         visiblePixels = 0;
         lastRenderedCount = 0;
-        maskCtx.clearRect(0, 0, canvasWidth, canvasHeight); // Clear mask
+        maskCtx.clearRect(0, 0, canvasWidth, canvasHeight);
       }
 
-      // B. Update Mask (Incremental)
+      setDebugPhase(currentPhase);
+
+      // B. Update Mask
       if (currentPhase === 'filling' && visiblePixels > lastRenderedCount) {
-        maskCtx.fillStyle = '#000000'; // Color doesn't matter for masking, fully opaque
-        // Draw new pixels
-        // Batch drawing is faster (beginPath / rect / fill)
+        maskCtx.fillStyle = '#000000';
         maskCtx.beginPath();
         for (let i = lastRenderedCount; i < visiblePixels; i++) {
           if (i >= totalGridPixels) break;
@@ -295,56 +306,17 @@ export function PixelatedBoard({
       }
 
       // C. Composition
-      // 1. Draw Gray Background
       ctx.drawImage(grayCanvas, 0, 0);
 
-      // 2. Prepare to Draw Color Layer masked by Mask Layer
       ctx.save();
-
-      // If blinking, we ignore the mask and just show FULL color (maybe with some opacity flicker?)
       if (currentPhase === 'blinking') {
-        // Future Glimpse Mode!
-        ctx.globalAlpha = 0.9 + Math.random() * 0.1; // Slight flicker
+        ctx.globalAlpha = 0.9 + Math.random() * 0.1;
         ctx.drawImage(colorCanvas, 0, 0);
-
-        // Add a "Pure White" flash overlay at the start of blink?
         if (timestamp - blinkStartTime < 50) {
           ctx.fillStyle = 'white';
           ctx.globalAlpha = 0.3;
           ctx.fillRect(0, 0, canvasWidth, canvasHeight);
         }
-      } else {
-        // Standard Progress Mode
-        // We need to apply the mask.
-        // Canvas logic: destination-in keeps destination where source overlaps.
-        // But we want to draw Color *masked by* Mask.
-        // Easiest: Draw Mask first (opaque), then draw Color with 'source-in'?
-        // No, that replaces the canvas content.
-        // We need an intermediate buffer for the masked color layer if we want to composit over gray.
-
-        // Option: 
-        // 1. Create a temp layer.
-        // 2. Draw Color Layer.
-        // 3. Draw Mask Layer with 'destination-in' (keeps color only where mask is).
-        // 4. Draw temp layer onto Main Context.
-
-        // BUT creating a 1920x1080 canvas every frame is DEATH for Perf.
-        // Solution: Using 'clip' from the mask? Path based clipping is slow for millions of rects.
-
-        // Optimized Composition:
-        // Main Ctx already has Gray.
-        // We want to draw Color on top, but restricted to Mask pixels.
-        // Since Mask is just black pixels on transparency...
-        // We can assume pixels align?
-
-        // Efficient way without limited layers:
-        // 1. Draw Gray on Main.
-        // 2. Draw Color on Main.
-        // 3. Draw "Inverse Mask" to erase Color revealing Gray?? Hard.
-
-        // Back to Temp Canvas (re-used):
-        // We need ONE persistent temp canvas.
-        // See 'compositionCanvas' below.
       }
       ctx.restore();
 
@@ -352,45 +324,15 @@ export function PixelatedBoard({
         drawMaskedColorLayer();
       }
 
-      // Debug/Overlay info
-      // (Handled by React UI overlay, not canvas)
-
       animationRef.current = requestAnimationFrame(persistentMaskLoop);
     };
 
-    // Temp Composition Canvas (Created once)
-    const compCanvas = document.createElement('canvas');
-    compCanvas.width = canvasWidth;
-    compCanvas.height = canvasHeight;
-    const compCtx = compCanvas.getContext('2d');
-
-    const drawMaskedColorLayer = () => {
-      if (!compCtx) return;
-      // Clear temp
-      compCtx.clearRect(0, 0, canvasWidth, canvasHeight);
-
-      // 1. Draw the Mask (The shape we want)
-      compCtx.drawImage(maskCanvas, 0, 0);
-
-      // 2. Draw the Color Image source-in (ONLY keep color where mask exists)
-      compCtx.globalCompositeOperation = 'source-in';
-      compCtx.drawImage(colorCanvas, 0, 0);
-
-      // 3. Reset Composite
-      compCtx.globalCompositeOperation = 'source-over';
-
-      // 4. Draw result onto Main Canvas (on top of Gray)
-      ctx.drawImage(compCanvas, 0, 0);
-    };
-
-    // Start Loop
     animationRef.current = requestAnimationFrame(persistentMaskLoop);
 
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-
-  }, [board, domains, isLoading, loadedImages, pixelSize]);
+  }, [isLoading, generationId, pixelSize]); // Restart loop if loading state or static assets change
 
   // Calculations for UI Overlay
   const completionPercentage = board.totalPixels > 0
@@ -411,14 +353,11 @@ export function PixelatedBoard({
       <canvas
         ref={canvasRef}
         className="w-full h-full object-cover"
-        style={{ imageRendering: "pixelated" }} // Crisp pixels
+        style={{ imageRendering: "pixelated" }}
       />
 
-      {/* Cinematic Overlay - On Hover or Always? Let's make it clean. */}
-      {/* VIGNETTE */}
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_50%,rgba(0,0,0,0.6)_100%)]" />
 
-      {/* Enhanced Progress Overlay */}
       <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
         <div className="flex items-end justify-between">
           <div>
@@ -434,7 +373,6 @@ export function PixelatedBoard({
               </span>
             </div>
 
-            {/* Pixel Bar */}
             <div className="w-64 h-1.5 bg-white/10 rounded-full mt-2 overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-purple-500 via-orange-500 to-pink-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]"
@@ -443,7 +381,6 @@ export function PixelatedBoard({
             </div>
           </div>
 
-          {/* Future Blink Indicator */}
           <div className="flex flex-col items-end">
             <div className={`px-2 py-0.5 rounded border border-purple-500/30 bg-purple-500/10 backdrop-blur text-[10px] font-mono text-purple-300 transition-opacity duration-300 ${debugPhase === 'blinking' ? 'opacity-100' : 'opacity-0'}`}>
               FUTURE GLIMPSE ACTIVE
@@ -466,8 +403,6 @@ function drawImageToContext(
   grayscale: boolean = false
 ) {
   ctx.save();
-
-  // Aspect Ratio "Cover" Logic
   const imgAspect = image.width / image.height;
   const rectAspect = width / height;
   let drawWidth = width;
@@ -485,7 +420,6 @@ function drawImageToContext(
     drawY = (height - drawHeight) / 2;
   }
 
-  // Clip to region
   ctx.beginPath();
   ctx.rect(x, y, width, height);
   ctx.clip();
@@ -493,18 +427,11 @@ function drawImageToContext(
   ctx.drawImage(image, x + drawX, y + drawY, drawWidth, drawHeight);
 
   if (grayscale) {
-    // Apply grayscale filter on top? 
-    // Context filter property is easiest but sometimes slow.
-    // Or manual pixel manip.
-    // Let's use 'saturation' composite for older browsers or filter for modern.
-    // Standard approach: get data and desaturate.
-    // Optimized: draw with filter.
     ctx.globalCompositeOperation = "saturation";
     ctx.fillStyle = "hsl(0,0%,50%)";
     ctx.fillRect(x, y, width, height);
     ctx.globalCompositeOperation = "source-over";
 
-    // Darken gray layer slightly for drama
     ctx.fillStyle = "rgba(0,0,0,0.4)";
     ctx.fillRect(x, y, width, height);
   }
@@ -516,7 +443,6 @@ function drawPlaceholder(ctx: CanvasRenderingContext2D, item: any, color: string
   ctx.fillStyle = grayscale ? '#222' : color;
   ctx.fillRect(item.x, item.y, item.width, item.height);
 
-  // Grid pattern
   ctx.strokeStyle = "rgba(255,255,255,0.1)";
   ctx.beginPath();
   ctx.moveTo(item.x, item.y);
@@ -525,14 +451,11 @@ function drawPlaceholder(ctx: CanvasRenderingContext2D, item: any, color: string
 }
 
 function calculateLayout(type: string, domains: Domain[], w: number, h: number) {
-  // Reuse existing layout logic simplified or just return array
   const domainCount = domains.length;
   const layout: Array<{ domainId: string; x: number; y: number; width: number; height: number }> = [];
 
-  if (type === "weekly" || true) { // Force clean layout for now
+  if (type === "weekly" || true) {
     if (domainCount === 4) {
-      // 2x2 Grid is usually more aesthetic than strips for a "Picture" look
-      // User asked for "Vision Board" - usually a collage.
       const halfW = w / 2;
       const halfH = h / 2;
       layout.push({ domainId: domains[0].id, x: 0, y: 0, width: halfW, height: halfH });
@@ -540,7 +463,6 @@ function calculateLayout(type: string, domains: Domain[], w: number, h: number) 
       layout.push({ domainId: domains[2].id, x: 0, y: halfH, width: halfW, height: halfH });
       layout.push({ domainId: domains[3].id, x: halfW, y: halfH, width: halfW, height: halfH });
     } else {
-      // Fallback Vertical Strips
       const stripHeight = h / domains.length;
       domains.forEach((d, i) => {
         layout.push({ domainId: d.id, x: 0, y: i * stripHeight, width: w, height: stripHeight });
@@ -554,7 +476,7 @@ function drawPixelatedGrid(ctx: CanvasRenderingContext2D, w: number, h: number, 
   ctx.strokeStyle = color;
   ctx.lineWidth = 0.5;
   ctx.beginPath();
-  for (let x = 0; x <= w; x += size * 2) { ctx.moveTo(x, 0); ctx.lineTo(x, h); } // Less dense grid
+  for (let x = 0; x <= w; x += size * 2) { ctx.moveTo(x, 0); ctx.lineTo(x, h); }
   for (let y = 0; y <= h; y += size * 2) { ctx.moveTo(0, y); ctx.lineTo(w, y); }
   ctx.stroke();
 }

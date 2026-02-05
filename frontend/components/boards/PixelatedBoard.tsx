@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, memo } from "react";
 import type { VisionBoard, Domain } from "@/lib/types";
 
 interface PixelatedBoardProps {
@@ -10,7 +10,7 @@ interface PixelatedBoardProps {
   showCheckpoints?: boolean;
 }
 
-export function PixelatedBoard({
+export const PixelatedBoard = memo(function PixelatedBoard({
   board,
   domains,
   pixelSize = 10,
@@ -73,7 +73,9 @@ export function PixelatedBoard({
     if (!canvasRef.current || isLoading || loadedImages.size === 0) return;
 
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    // Bolt Optimization: Removed willReadFrequently: true to allow GPU acceleration.
+    // This context is only used for writing (drawImage), not reading back pixels.
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     canvas.width = canvasWidth;
@@ -453,7 +455,7 @@ export function PixelatedBoard({
       </div>
     </div>
   );
-}
+});
 
 // Helpers
 function drawImageToContext(
